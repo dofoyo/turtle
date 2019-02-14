@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Trade {
-	List<Item> items = new ArrayList<Item>();
+	//List<Item> items = new ArrayList<Item>();
 	List<Record> records = new ArrayList<Record>(); 
 	
 	private LocalDate beginDate;
@@ -104,7 +104,7 @@ public class Trade {
 		return result;
 	}
 	
-	public void addItem(String code, String name, BigDecimal lot, List<Map<String,String>> kDatas,Map<LocalDate,Set<String>> tops) {
+	public void addItem(String code, String name, BigDecimal lot, List<Map<String,String>> kDatas,Map<LocalDate,List<String>> tops) {
 		Item item = new Item(code,name,lot,openDuration, closeDuration);
 		
 		List<Record> tmps = null;
@@ -122,7 +122,6 @@ public class Trade {
 		BigDecimal low = null;
 		BigDecimal close = null;
 
-		Bar bar;
 		for(Map<String,String> kData : kDatas) {
 			date = LocalDate.parse(kData.get("date"),DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 			open = new BigDecimal(kData.get("open"));
@@ -134,10 +133,18 @@ public class Trade {
 			if(d!=0) {
 				for(Iterator<Record> i=tmps.iterator(); i.hasNext();) {
 					tmp = i.next();
-					stopPrice = tmp.stop(close);
+					stopPrice = tmp.getStopPrice(close);
+					
+					/*if(code.equals("sh601118")) {
+						System.out.println("日期：" + date);
+						System.out.println("止损价：" + tmp.getStopPrice());
+						System.out.println("现价：" + close);
+						System.out.println("是否止损:" + (stopPrice==null ? "no" : "yes"));
+					}*/
+					
 					if(stopPrice != null){
-						record = new Record(tmp.getId(),code,name,date,stopPrice);
-						record.setNote("止损(" + tmp.getPrice() + "-" + tmp.getAtr() + "=" + stopPrice +")，当天收盘价：" + close);
+						record = new Record(tmp.getId(),code,name,date,close);
+						record.setNote("止损");
 						records.add(record);					
 						i.remove();
 					}
@@ -146,11 +153,19 @@ public class Trade {
 			
 			//平仓
 			if(d!=0) {
-				closePrice = item.closePing(close, d);
+				closePrice = item.closePing(date, close, d);
+				
+				/*if(code.equals("sh601118")) {
+					System.out.println("日期：" + date);
+					System.out.println("平仓价：" + item.closePing(d));
+					System.out.println("现价：" + close);
+					System.out.println("是否平仓:" + (stopPrice==null ? "yes" : "no"));
+				}*/
+				
 				if(closePrice!=null) {
 					for(Record r : tmps) {
-						record = new Record(r.getId(),code,name,date,closePrice);
-						record.setNote("平仓，当天收盘价：" + close);
+						record = new Record(r.getId(),code,name,date,close);
+						record.setNote("平仓");
 						records.add(record);					
 					}
 					d = 0;
@@ -163,7 +178,7 @@ public class Trade {
 				record = item.openPing(date, close);
 				if(record != null) {
 					if(record.getDirection()>0 && d==0) { //初次开多仓
-						record.setNote("建多仓，当天收盘价：" + close);
+						record.setNote("建多仓");
 						lastOpenPrice = record.getPrice();
 						records.add(record);
 						d++;
@@ -173,11 +188,9 @@ public class Trade {
 						tmps.add(record);							
 					}
 					if(record.getDirection()>0 && d>0 && d<maxOfLot) {  //加开多仓
-						//lastOpenPrice.add(this.getHalfATR()).compareTo(this.getPrice())==-1) {
-						reOpenPrice = record.reOpen(lastOpenPrice);
+						reOpenPrice = record.getReopenPrice(lastOpenPrice);
 						if(reOpenPrice != null) {
-							record.setNote("加多仓("+ lastOpenPrice + "+" + record.getAtr() + "=" + reOpenPrice +")，当天收盘价：" + close);
-							record.setPrice(reOpenPrice);
+							record.setNote("加多仓");
 							lastOpenPrice = record.getPrice();
 							records.add(record);
 							d++;
@@ -185,7 +198,7 @@ public class Trade {
 						}
 					}
 					if(record.getDirection()<0 && d==0) { //初次开空仓
-						record.setNote("建空仓，当天收盘价：" + close);
+						record.setNote("建空仓");
 						lastOpenPrice = record.getPrice();
 						records.add(record);
 						d--;
@@ -195,10 +208,9 @@ public class Trade {
 						tmps.add(record);	
 					}
 					if(record.getDirection()<0 && d<0 && d>-1*maxOfLot) { //加开空仓
-						reOpenPrice = record.reOpen(lastOpenPrice);
+						reOpenPrice = record.getReopenPrice(lastOpenPrice);
 						if(reOpenPrice != null) {
-							record.setNote("加空仓("+ lastOpenPrice + "-" + record.getAtr() + "=" + reOpenPrice +")，当天收盘价：" + close);
-							record.setPrice(reOpenPrice);
+							record.setNote("加空仓");
 							lastOpenPrice = record.getPrice();
 							records.add(record);
 							d--;
@@ -208,7 +220,7 @@ public class Trade {
 				}
 			}
 			
-			bar = item.addBar(date, open, high, low, close);
+			item.addBar(date, open, high, low, close);
 /*			
 			if(code.equals("600030")) {
 				System.out.println(bar);

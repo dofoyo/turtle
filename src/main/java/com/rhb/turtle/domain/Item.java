@@ -42,26 +42,25 @@ public class Item {
 	/*
 	 * 入市判断
 	 */
-	public Record openPing(LocalDate date, BigDecimal close) {
+	public Record openPing(LocalDate date, BigDecimal price) {
 		Record record = null;
 		
 		if(this.bars.size()>=this.openDuration) {
+			Bar preBar = this.bars.get(this.bars.size()-1);
+
 			Map<String,BigDecimal> keyValues = getOpenKeyValues();
 			BigDecimal highest = keyValues.get("highest");
 			BigDecimal lowest = keyValues.get("lowest");
 			BigDecimal atr = keyValues.get("atr");
 
 			//突破高点，上涨势头，买多
-			if(close.compareTo(highest)>0) {
-				record = new Record(UUID.randomUUID().toString(), this.code, this.name, date, 1, highest, atr, lot);
-				//record.setNote("突破高点，上涨势头，买多");
-
+			if(price.compareTo(highest)>0) {
+				record = new Record(UUID.randomUUID().toString(), this.code, this.name, date, 1, price, atr, lot);
 			}
 			
 			//突破低点，下跌势头，卖空
-			if(close.compareTo(lowest)<0) {
-				record = new Record(UUID.randomUUID().toString(), this.code, this.name, date, -1, lowest, atr, lot);
-				//record.setNote("突破低点，下跌势头，卖空");
+			if(price.compareTo(lowest)<0) {
+				record = new Record(UUID.randomUUID().toString(), this.code, this.name, date, -1, price, atr, lot);
 			}
 		}
 		return record;
@@ -70,7 +69,7 @@ public class Item {
 	/*
 	 * 退出判断
 	 */
-	public BigDecimal closePing(BigDecimal close, Integer d) {
+	public BigDecimal closePing(LocalDate date,BigDecimal price, Integer d) {
 	
 		if(this.bars.size()>=this.openDuration) {
 			Map<String,BigDecimal> keyValues = getCloseKeyValues();
@@ -78,12 +77,31 @@ public class Item {
 			BigDecimal lowest = keyValues.get("lowest");
 
 			//持有空头头寸，突破高点，上涨势头，平仓
-			if(d<0 && close.compareTo(highest)>0) {
+			if(d<0 && price.compareTo(highest)>0) {
 				return highest;
 			}
 			
 			//持有多头头寸，突破低点，下跌趋势，平仓
-			if(d>0 && close.compareTo(lowest)<0) {
+			if(d>0 && price.compareTo(lowest)<0) {
+				return lowest;
+			}			
+		}
+		return null;
+	}
+	
+	public BigDecimal closePing(Integer direction) {
+		if(this.bars.size()>=this.openDuration) {
+			Map<String,BigDecimal> keyValues = getCloseKeyValues();
+			BigDecimal highest = keyValues.get("highest");
+			BigDecimal lowest = keyValues.get("lowest");
+
+			//持有空头头寸，突破高点，上涨势头，平仓
+			if(direction<0) {
+				return highest;
+			}
+			
+			//持有多头头寸，突破低点，下跌趋势，平仓
+			if(direction>0) {
 				return lowest;
 			}			
 		}
@@ -218,6 +236,12 @@ public class Item {
 		this.lot = lot;
 	}
 
-	
+	public BigDecimal getLatestClosePrice() {
+		if(bars.size()>0) {
+			return bars.get(bars.size()-1).getClose();
+		}else {
+			return null;
+		}
+	}
 	
 }

@@ -1,5 +1,10 @@
 kDataPath: c:/workspace/turtle-data/dzh_hsag
-reportPath: C:/workspace/turtle-data
+reportPath: C:/workspace/turtle-data/report
+dataPath: C:/workspace/turtle-data
+top50File: C:/workspace/turtle-data/top50.txt
+topsFile: C:/workspace/turtle-data/tops.txt
+dailyTop100: C:/workspace/turtle-data/dailyTop100.txt
+avaTop50: C:/workspace/turtle-data/avaTop50.txt
 
 
 

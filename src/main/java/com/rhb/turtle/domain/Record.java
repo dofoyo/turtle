@@ -35,6 +35,16 @@ public class Record {
 	private Integer quantity;
 	
 	private String note;
+	
+	private boolean valid = true;
+
+	public boolean isValid() {
+		return valid;
+	}
+
+	public void setValid(boolean valid) {
+		this.valid = valid;
+	}
 
 	/*
 	 * open时用
@@ -69,10 +79,19 @@ public class Record {
 	 * 多仓时，当止损价大于现价，止损
 	 * 空仓时，当止损价小于现价，止损
 	 */
-	public BigDecimal stop(BigDecimal price) {
+	public BigDecimal getStopPrice(BigDecimal price) {
 		if(this.direction==1 && this.price.subtract(this.getAtr()).compareTo(price)==1) {
 			return this.price.subtract(this.getAtr());
 		}else if(this.direction==-1 && this.price.add(this.getAtr()).compareTo(price)==-1) {
+			return this.price.add(this.getAtr());
+		}
+		return null;
+	}
+	
+	public BigDecimal getStopPrice() {
+		if(this.direction==1) {
+			return this.price.subtract(this.getAtr());
+		}else if(this.direction==-1) {
 			return this.price.add(this.getAtr());
 		}
 		return null;
@@ -83,7 +102,7 @@ public class Record {
 	 * 多仓时，加仓价小于现价，加仓
 	 * 空仓时，加仓价大于现价，加仓
 	 */
-	public BigDecimal reOpen(BigDecimal lastOpenPrice) {
+	public BigDecimal getReopenPrice(BigDecimal lastOpenPrice) {
 		//System.out.println(this.getDate() +"加仓价：" + lastOpenPrice.add(this.getHalfATR()) + ", 现价：" + this.getPrice());
 		if(this.direction==1 && lastOpenPrice.add(this.getAtr()).compareTo(this.getPrice())==-1) {
 			return lastOpenPrice.add(this.getAtr());
@@ -101,14 +120,6 @@ public class Record {
 		this.id = id;
 	}
 
-	public BigDecimal getHalfATR() {
-		return this.atr.divide(new BigDecimal(2));
-	}
-	
-	public BigDecimal getDoubleATR() {
-		return this.atr.multiply(new BigDecimal(2));
-	}
-	
 	public BigDecimal getAmount() {
 		return price.multiply(new BigDecimal(quantity));
 	}

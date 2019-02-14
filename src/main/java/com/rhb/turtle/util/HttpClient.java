@@ -2,6 +2,7 @@ package com.rhb.turtle.util;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -61,8 +63,33 @@ public class HttpClient {
 		return resultString;
 	}
 
-	public static String doGet(String url) {
-		return doGet(url, null);
+	public static String doGet(String strUrl) {
+		String resultString = "";
+		CloseableHttpResponse response = null;
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		try {
+			URL url = new URL(strUrl);
+			URI uri = new URI(url.getProtocol(), url.getHost(), url.getPath(), url.getQuery(), null);
+			HttpGet httpGet = new HttpGet(uri);
+			
+			response = httpclient.execute(httpGet);
+	
+			if (response.getStatusLine().getStatusCode() == 200) {
+				resultString = EntityUtils.toString(response.getEntity(), "UTF-8");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (response != null) {
+					response.close();
+				}
+				httpclient.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}		
+		return resultString;
 	}
 
 	public static String doPost(String url, Map<String, String> param) {
@@ -130,4 +157,18 @@ public class HttpClient {
 		return resultString;
 	}
 
+	
+	
+	/*
+	 * java.net.URISyntaxException: Illegal character in query at index 44
+ 
+
+查找了一些网上资料，说地址中涉及了特殊字符，如‘｜’‘&’等。所以不能直接用String代替URI来访问。必须采用%0xXX方式来替代特殊字符。但这种办法不直观。所以只能先把String转成URL，再能过URL生成URI的方法来解决问题。代码如下
+
+URL url = new URL(strUrl);
+URI uri = new URI(url.getProtocol(), url.getHost(), url.getPath(), url.getQuery(), null);
+HttpClient client    = new DefaultHttpClient();
+HttpGet httpget = new HttpGet(uri);
+*/
+	
 }

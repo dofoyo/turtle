@@ -9,6 +9,7 @@ public class Bar {
 	private BigDecimal high;
 	private BigDecimal low;
 	private BigDecimal close;
+	private BigDecimal amount;
 	private BigDecimal tr; // 波动幅度
 	
 	
@@ -60,10 +61,20 @@ public class Bar {
 		this.tr = tr;
 	}
 
+	public BigDecimal getAmount() {
+		return amount;
+	}
+
+	public void setAmount(BigDecimal amount) {
+		this.amount = amount;
+	}
+
 	@Override
 	public String toString() {
 		return "Bar [date=" + date + ", open=" + open + ", high=" + high + ", low=" + low + ", close=" + close
-				+ ", tr=" + tr + "]";
+				+ ", amount=" + amount + ", tr=" + tr + "]";
 	}
-	
+
+
+
 }

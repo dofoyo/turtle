@@ -22,9 +22,9 @@ public class TurtleServiceTest {
 	@Qualifier("TurtleServiceImp")
 	TurtleService ts;
 	
-	@Test
-	public void testGetKDatas() {
-		Map<String,String> result = ts.doTrade();
+	//@Test
+	public void simulate() {
+		Map<String,String> result = ts.simulate();
 		System.out.println("initCash: " + result.get("initCash"));
 		System.out.println("cash: " + result.get("cash"));
 		System.out.println("value: " + result.get("value"));
@@ -32,6 +32,17 @@ public class TurtleServiceTest {
 		System.out.println("winRatio: " + result.get("winRatio"));
 		System.out.println("CAGR: " + result.get("cagr"));
 		FileUtil.writeTextFile(reportPath + "/record" + System.currentTimeMillis() + ".csv", result.get("CSV"), false);
-
+	}
+	
+	@Test
+	public void simulate2() {
+		Map<String,String> result = ts.simulate2();
+		System.out.println("initCash: " + result.get("initCash"));
+		System.out.println("cash: " + result.get("cash"));
+		System.out.println("value: " + result.get("value"));
+		System.out.println("total: " + result.get("total"));
+		System.out.println("winRatio: " + result.get("winRatio"));
+		System.out.println("CAGR: " + result.get("cagr"));
+		FileUtil.writeTextFile(reportPath + "/record" + System.currentTimeMillis() + ".csv", result.get("CSV"), false);
 	}
 }

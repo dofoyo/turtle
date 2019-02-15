@@ -1,8 +1,5 @@
-package com.rhb.turtle.spider;
+package com.rhb.turtle.operation.spider;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -18,10 +15,15 @@ import org.springframework.stereotype.Service;
 import com.rhb.turtle.util.FileUtil;
 import com.rhb.turtle.util.HttpClient;
 
-@Service("MarketInfoSpiderImp")
-public class MarketInfoSpiderImp implements MarketInfoSpider {
-	@Value("${top50File}")
-	private String top50File;
+@Service("marketInfoOperationSpiderImp")
+public class MarketInfoOperationSpiderImp implements MarketInfoOperationSpider {
+	@Value("${dailyTop100File}")
+	private String dailyTop100File;
+	
+	@Value("${kDataPath}")
+	private String kDataPath;
+	
+	
 	
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -39,10 +41,10 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 
 	
 	@Override
-	public Map<String, String> getLatestMarketData(String code) {
+	public Map<String, String> getLatestMarketData(String id) {
 		Map<String,String> map = new HashMap<String,String>();
 		
-		String url = "http://qt.gtimg.cn/q=" + code;
+		String url = "http://qt.gtimg.cn/q=" + id;
 		String result = HttpClient.doGet(url);
 		
 		//System.out.println(result);
@@ -50,7 +52,7 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 		String[] ss = result.split("~");
 		//System.out.println(ss[2] + "," + ss[3] + "," + ss[30]);
 		
-		map.put("date", ss[30].substring(0, 8));
+		map.put("date", LocalDate.parse(ss[30].substring(0, 8),DateTimeFormatter.ofPattern("yyyyMMdd")).toString());
 		map.put("code", ss[2]);
 		map.put("name", ss[1]);
 		map.put("preClose", ss[4]);
@@ -66,7 +68,7 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 
 
 	@Override
-	public void downLatestTop100() {
+	public void downLatestDailyTop100() {
 		String strUrl = "http://q.jrjimg.cn/?q=cn|s|sa&c=s,ta,tm,sl,cot,cat,ape&n=hqa&o=tm,d&p=1100&_dc=1549936839524";
 		System.out.println(strUrl);
 		String result = HttpClient.doGet(strUrl);
@@ -83,7 +85,7 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 				}
 			}
 		}
-		FileUtil.writeTextFile(top50File, sb.toString(), false);
+		FileUtil.writeTextFile(dailyTop100File, sb.toString(), true);
 
 	}
 
@@ -97,8 +99,8 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 		strUrl = strUrl.replace("CODE", code);
 		strUrl = strUrl.replace("YEAR", year);
 		strUrl = strUrl.replace("JIDU", jidu);
-		
-		//System.out.println(strUrl);
+		String file = kDataPath + "/" + code + ".txt";
+		System.out.println(file);
 		
 		try {
 			//String str = HttpClient.doGet(strUrl);
@@ -107,22 +109,19 @@ public class MarketInfoSpiderImp implements MarketInfoSpider {
 			Element table = doc.getElementById("FundHoldSharesTable");
 			Elements trs = table.select("tr");
 			Elements tds;
+			StringBuffer sb = new StringBuffer();
 			for (int i = 0; i < trs.size(); i++) {
 				tds = trs.get(i).select("td");
 				for (int j = 0; j < tds.size(); j++) {
 					String text = tds.get(j).text();
-					System.out.print(text + ",");
+					sb.append(text);
+					if(j<(tds.size()-1)) sb.append(",");
 				}
-				System.out.println("");
+				if(sb.length()>0)	sb.append("\n");
 			}
+			System.out.println(sb.toString());
 			
-			/*
-			Elements es = table.getAllElements();
-			for(Element e : es) {
-				System.out.println(e.html());
-			}*/
-			
-			//System.out.println(table.html());
+			FileUtil.writeTextFile(file, sb.toString(), false);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

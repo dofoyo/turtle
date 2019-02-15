@@ -22,10 +22,10 @@ public class Article {
 		this.bars = new ArrayList<Kbar>();
 	}
 	
-	public Kbar addBar(LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,Integer openDuration) {
+	public Kbar addBar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,Integer openDuration) {
 		Kbar bar=null;
 		if(this.bars.size()==0) {
-			bar = new Kbar(date,open,high,low,close,this.getTR(high, low, close));
+			bar = new Kbar(articleID,date,open,high,low,close,this.getTR(high, low, close));
 			this.bars.add(bar);
 			return bar;
 		}
@@ -35,7 +35,7 @@ public class Article {
 			Kbar preBar = this.bars.get(this.bars.size()-1);
 			BigDecimal preClose = preBar.getClose();
 			BigDecimal tr = getTR(high,low,preClose);
-			bar = new Kbar(date,open,high,low,close,tr);
+			bar = new Kbar(articleID,date,open,high,low,close,tr);
 			//System.out.println(bar);
 			this.bars.add(bar);
 			if(this.bars.size()>openDuration) {
@@ -96,11 +96,13 @@ public class Article {
 			
 			//突破高点，上涨势头，买多
 			if(price.compareTo(highest)>0) {
+				System.out.println("现价" + price + "突破" + openDuration + "天高点" + highest + ",开多仓！！");
 				return 1;
 			}
 			
 			//突破低点，下跌势头，卖空
 			if(price.compareTo(lowest)<0) {
+				System.out.println("现价" + price + "突破" + openDuration + "天低点" + highest + ",开空仓！！");
 				return -1;
 			}
 		}
@@ -125,7 +127,7 @@ public class Article {
 	/*
 	 * 计算一段时间内的最高点、最低点
 	 */
-	private BigDecimal[] getHighestAndLowest(Integer duration){
+	public BigDecimal[] getHighestAndLowest(Integer duration){
 		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
 		Integer toIndex = this.bars.size();
 		List<Kbar> subBars = this.bars.subList(fromIndex, toIndex);
@@ -156,11 +158,13 @@ public class Article {
 
 			//持有空头头寸，突破高点，上涨势头，平仓
 			if(d<0 && price.compareTo(highest)>0) {
+				System.out.println("持有空头，但现价" + price + "突破" + openDuration + "天高点" + highest + ",立即平仓！！");
 				return true;
 			}
 			
 			//持有多头头寸，突破低点，下跌趋势，平仓
 			if(d>0 && price.compareTo(lowest)<0) {
+				System.out.println("持有多头，但现价" + price + "突破" + openDuration + "天低点" + lowest + ",立即平仓！！");
 				return true;
 			}			
 		}

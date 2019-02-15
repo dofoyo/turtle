@@ -1,4 +1,4 @@
-package com.rhb.turtle.repository;
+package com.rhb.turtle.simulation.repository;
 
 import java.time.LocalDate;
 import java.util.Iterator;
@@ -13,13 +13,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.rhb.turtle.simulation.repository.TurtleSimulationRepository;
+
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
-public class TurtleRepositoryTests {
+public class TurtleSimulationRepositoryTests {
 	@Autowired
-	@Qualifier("TurtleRepositoryImpDzh")
-	TurtleRepository tr ;
+	@Qualifier("turtleRepositorySimulation")
+	TurtleSimulationRepository tr ;
 
 	//@Test
 	public void testGetCodes() {

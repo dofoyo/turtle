@@ -1,4 +1,4 @@
-package com.rhb.turtle.service;
+package com.rhb.turtle.simulation.service;
 
 import java.util.Map;
 
@@ -10,17 +10,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.rhb.turtle.simulation.service.TurtleSimulationService;
 import com.rhb.turtle.util.FileUtil;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
-public class TurtleServiceTest {
+public class TurtleSimulationServiceTest {
 	@Value("${reportPath}")
 	private String reportPath;
 	
 	@Autowired
-	@Qualifier("TurtleServiceImp")
-	TurtleService ts;
+	@Qualifier("turtleSimulationServiceImp")
+	TurtleSimulationService ts;
 	
 	//@Test
 	public void simulate() {

@@ -1,4 +1,4 @@
-package com.rhb.turtle.repository;
+package com.rhb.turtle.simulation.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -6,15 +6,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface TurtleRepository {
-	public List<Map<String,String>> getKDatas(String code, LocalDate beginDate, LocalDate endDate);
+public interface TurtleSimulationRepository {
+	public Map<String,String> getKData(String id, LocalDate date);
+	public List<String> getAvaTopIds(Integer top,LocalDate date);
+	public List<String> getDailyTopIds(Integer top,LocalDate date);
+	public List<String> getLatestDailyTopIds();
+	public List<String> getArticleIDs();
+	//---------------------------------
+	
 	public List<Map<String,String>> getKDatas(LocalDate date, Integer top);
+
+	
+	public List<Map<String,String>> getKDatas(String code, LocalDate beginDate, LocalDate endDate);
 
 	
 	/*
 	 * sh或sz加上股票代码即为code
 	 */
-	public Map<String,String> getKData(String id, LocalDate date);
 	
 	/*
 	 * 获得目录下所有代码
@@ -25,7 +33,6 @@ public interface TurtleRepository {
 	 * 根据top100和其K线数据，获得某时间段内300天平均成交金额排行最前的股票
 	 */
 	public Map<LocalDate, List<String>> getAvaTops(Integer top,LocalDate beginDate, LocalDate endDate);
-	public List<String> getAvaTops(Integer top,LocalDate date);
 
 	
 	public Map<LocalDate, Set<String>> getTops(Integer top,LocalDate beginDate, LocalDate endDate);

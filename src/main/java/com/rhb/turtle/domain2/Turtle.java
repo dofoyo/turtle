@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class Turtle {
@@ -52,46 +51,65 @@ public class Turtle {
 		articles = new HashMap<String,Article>();
 	}
 	
-	public Set<String> getArticleIDsOfOnHand() {
+	
+	public Map<String,BigDecimal> getArticlePrices(String articleID){
+		Article article = articles.get(articleID);
+		BigDecimal[] highAndLow = article.getHighestAndLowest(openDuration);
+		Map<String,BigDecimal> line = new HashMap<String,BigDecimal>();
+		line.put("high", highAndLow[0]);
+		line.put("low", highAndLow[1]);
+		return line;
+	}
+	
+	public List<String> getArticleIDsOfOnHand() {
 		return fund.getArticleIDsOfOnHand();
 	}
 	
-	public void doit(List<Map<String,String>> kDatas) {
-		String articleID;
-		LocalDate date;
-		BigDecimal open;
-		BigDecimal high;
-		BigDecimal low;
-		BigDecimal close;
+	public void doit(Map<String,String> kData) {
+		Kbar bar = getKbar(kData);
 		
-		Article article;
-		Order order;
+		Article article = articles.get(bar.getArticleID());
+		if(article == null) {
+			article = new Article(bar.getArticleID());
+			articles.put(bar.getArticleID(), article);
+		}
+		
+		//止损
+		doStop(bar.getDate(), article.getArticleID(), bar.getClose());
+		
+		//平仓
+		doClose(bar.getDate(), article, closeDuration, bar.getClose());
+		
+		//开新仓、加仓
+		doOpen(bar.getDate(), article, openDuration, bar.getClose());
+	}
+	
+	public void addBar(Map<String,String> kData) {
+		Kbar bar = getKbar(kData);
+		Article article = articles.get(bar.getArticleID());
+		if(article == null) {
+			article = new Article(bar.getArticleID());
+			articles.put(bar.getArticleID(), article);
+		}	
+		article.addBar(article.getArticleID(),bar.getDate(), bar.getOpen(), bar.getHigh(), bar.getLow(), bar.getClose(), openDuration);
+	}
+	
+	public void addBar(List<Map<String,String>> kDatas) {
 		for(Map<String,String> kData : kDatas) {
-			articleID = kData.get("id");
-			date = LocalDate.parse(kData.get("date"));
-			open = new BigDecimal(kData.get("open"));
-			high = new BigDecimal(kData.get("high"));
-			low = new BigDecimal(kData.get("low"));
-			close = new BigDecimal(kData.get("close"));
-			
-			article = articles.get(articleID);
-			if(article == null) {
-				article = new Article(articleID);
-				articles.put(articleID, article);
-			}
-			
-			//止损
-			doStop(date, article.getArticleID(), close);
-			
-			//平仓
-			doClose(date, article, closeDuration, close);
-			
-			//开新仓、加仓
-			doOpen(date, article, openDuration, close);
-			
-			article.addBar(date, open, high, low, close, openDuration);
+			this.addBar(kData);
 		}
 	}
+	
+	private Kbar getKbar(Map<String,String> kData) {
+		String articleID = kData.get("id");
+		LocalDate date = LocalDate.parse(kData.get("date"));
+		BigDecimal open = new BigDecimal(kData.get("open"));
+		BigDecimal high = new BigDecimal(kData.get("high"));
+		BigDecimal low = new BigDecimal(kData.get("low"));
+		BigDecimal close = new BigDecimal(kData.get("close"));
+		return new Kbar(articleID,date,open,high,low,close);
+	}
+	
 	
 	//止损
 	private void doStop(LocalDate date, String articleID, BigDecimal price){
@@ -108,7 +126,6 @@ public class Turtle {
 				fund.close(article.getArticleID(), date, price);
 			}
 		}
-		
 	}
 	
 	//开仓
@@ -120,6 +137,7 @@ public class Turtle {
 			BigDecimal atr = article.getATR(openDuration);
 			
 			if(flag==1 && lots==0) { //初次开多仓
+
 				BigDecimal stopPrice = price.subtract(atr);
 				BigDecimal reopenPrice = price.add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
 				openOrder = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	date, 1, price,	stopPrice,	reopenPrice	);
@@ -156,7 +174,6 @@ public class Turtle {
 				fund.open(openOrder, deficitFactor, atr, getLot(article.getArticleID()));
 			}
 		}
-		
 	}
 	
 	public Map<String,String> result() {

@@ -28,8 +28,8 @@ public class Fund {
 		this.cash = cash;
 	}
 
-	public Set<String> getArticleIDsOfOnHand() {
-		Set<String> ids = new HashSet<String>();
+	public List<String> getArticleIDsOfOnHand() {
+		List<String> ids = new ArrayList<String>();
 		for(Order order : onHands.values()) {
 			ids.add(order.getArticleID());
 		}
@@ -105,6 +105,8 @@ public class Fund {
 					System.out.println(date + " market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1));
 				}*/
 				if(price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
+					System.out.println(date + " stop price is " + openOrder.getStopPrice() + ", market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1));					
+					
 					Order closeOrder = new Order(openOrder.getOrderID(),date,price,openOrder.getQuantity());
 					closeOrder.setNote("stop");
 					

@@ -1,9 +1,9 @@
-package com.rhb.turtle.spider;
+package com.rhb.turtle.operation.spider;
 
 import java.time.LocalDate;
 import java.util.Map;
 
-public interface MarketInfoSpider {
+public interface MarketInfoOperationSpider {
 	public LocalDate getLatestMarketDate(); 
 	
 	/*
@@ -12,7 +12,7 @@ public interface MarketInfoSpider {
 	 */
 	public Map<String,String> getLatestMarketData(String id);
 	
-	public void downLatestTop100();
+	public void downLatestDailyTop100();
 	
 	public void downKdata(String id);
 

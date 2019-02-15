@@ -1,10 +1,9 @@
-kDataPath: c:/workspace/turtle-data/dzh_hsag
-reportPath: C:/workspace/turtle-data/report
-dataPath: C:/workspace/turtle-data
-top50File: C:/workspace/turtle-data/top50.txt
-topsFile: C:/workspace/turtle-data/tops.txt
-dailyTop100: C:/workspace/turtle-data/dailyTop100.txt
-avaTop50: C:/workspace/turtle-data/avaTop50.txt
+kDataPath: c:/workspace/turtle-data/simulation/kdatas
+reportPath: C:/workspace/turtle-data/simulation/reports
+dailyTop100File: C:/workspace/turtle-data/simulation/dailyTop100.txt
+avaTop50File: C:/workspace/turtle-data/simulation/avaTop50.txt
+articleFile: C:/workspace/turtle-data/simulation/article.txt
+
 
 
 

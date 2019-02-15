@@ -1,4 +1,4 @@
-package com.rhb.turtle.repository;
+package com.rhb.turtle.simulation.repository;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -19,27 +19,133 @@ import org.springframework.stereotype.Service;
 
 import com.rhb.turtle.util.FileUtil;
 
-@Service("TurtleRepositoryImpDzh")
-public class TurtleRepositoryImpDzh implements TurtleRepository{
+@Service("turtleSimulationRepositoryImp")
+public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository{
 	@Value("${kDataPath}")
 	private String kDataPath;
 	
-	@Value("${dailyTop100}")
-	private String dailyTop100;
+	@Value("${dailyTop100File}")
+	private String dailyTop100File;
 	
-	@Value("${avaTop50}")
-	private String avaTop50;
+	@Value("${avaTop50File}")
+	private String avaTop50File;
+
+	@Value("${articleFile}")
+	private String articleFile;
 	
-	Map<LocalDate,List<String>> avaTops = null;
+	Map<LocalDate,List<String>> avaTopIds = null;
+	Map<LocalDate,List<String>> dailyTopIds = null;
 	
 	Map<String,Map<LocalDate,BarEntity>> kDatas = new HashMap<String,Map<LocalDate,BarEntity>>();
 
 	@Override
-	public List<Map<String, String>> getKDatas(LocalDate date, Integer top) {
-		if(avaTops == null) {
-			this.initAvaTops();
+	public List<String> getArticleIDs(){
+		List<String> ids = new ArrayList<String>();
+		String[] strs = FileUtil.readTextFile(articleFile).split(",");
+		for(String str : strs) {
+			ids.add(str);
 		}
-		List<String> ids = avaTops.get(date);
+		return ids;
+	}
+	
+	@Override
+	public List<String> getLatestDailyTopIds() {
+		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
+		String[] columns = lines[lines.length-1].split(",");
+		List<String> ids = new ArrayList<String>();
+		for(int i=1; i<columns.length; i++) {
+			ids.add(columns[i]);
+		}
+		return ids;
+	}
+
+	@Override
+	public List<String> getAvaTopIds(Integer top, LocalDate date) {
+		if(avaTopIds == null) {
+			this.initAvaTopIds();
+		}
+		List<String> ids = avaTopIds.get(date);
+		return ids!=null && ids.size()>0 ? ids.subList(0, top) : null;
+	}
+
+
+	@Override
+	public List<String> getDailyTopIds(Integer top, LocalDate date) {
+		if(dailyTopIds == null) {
+			this.initDailyTopIds();
+		}
+		List<String> ids = dailyTopIds.get(date);
+		return ids!=null && ids.size()>0 ? ids.subList(0, top) : null;
+	}
+
+	
+	
+	@Override
+	public Map<String,String> getKData(String id, LocalDate date) {
+		Map<LocalDate,BarEntity> datas = this.kDatas.get(id);
+		if(datas == null) {
+			datas = this.getKdatasFromTxt(id);
+			this.kDatas.put(id, datas);	
+		}
+		Map<String,String> kData = null;
+
+		BarEntity bar = datas.get(date);
+		if(bar!=null) {
+			kData = new HashMap<String,String>();
+			kData = new HashMap<String,String>();
+			kData.put("id", id);
+			kData.put("date", date.toString());
+			kData.put("open", bar.getOpen().toString());
+			kData.put("high", bar.getHigh().toString());
+			kData.put("low", bar.getLow().toString());
+			kData.put("close", bar.getClose().toString());
+		}
+		//System.out.println("kDatas.size = " + this.kDatas.size());
+		return kData;
+	}
+	
+	private void initAvaTopIds() {
+		avaTopIds = new HashMap<LocalDate,List<String>>();
+		String[] lines = FileUtil.readTextFile(avaTop50File).split("\n");
+		String[] columns;
+		List<String> codes;
+		LocalDate date;
+		for(String line : lines) {
+			columns = line.split(",");
+			codes = new ArrayList<String>();
+			date = LocalDate.parse(columns[0],DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			for(int i=1; i<columns.length; i++) {
+				codes.add(columns[i]);
+			}
+			avaTopIds.put(date, codes);				
+		}
+	}
+
+	private void initDailyTopIds() {
+		dailyTopIds = new HashMap<LocalDate,List<String>>();
+		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
+		String[] columns;
+		List<String> codes;
+		LocalDate date;
+		for(String line : lines) {
+			columns = line.split(",");
+			codes = new ArrayList<String>();
+			date = LocalDate.parse(columns[0],DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			for(int i=1; i<columns.length; i++) {
+				codes.add(columns[i]);
+			}
+			dailyTopIds.put(date, codes);				
+		}
+	}
+	
+	//--------------------------------
+	
+	@Override
+	public List<Map<String, String>> getKDatas(LocalDate date, Integer top) {
+		if(avaTopIds == null) {
+			this.initAvaTopIds();
+		}
+		List<String> ids = avaTopIds.get(date);
 		if(ids == null) {
 			return null;
 		}
@@ -113,7 +219,7 @@ public class TurtleRepositoryImpDzh implements TurtleRepository{
 	@Override
 	public Map<LocalDate, List<String>> getDailyTops(Integer top,LocalDate beginDate, LocalDate endDate) {
 		Map<LocalDate,List<String>> tops = new HashMap<LocalDate,List<String>>();
-		String[] lines = FileUtil.readTextFile(dailyTop100).split("\n");
+		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
 		String[] columns;
 		List<String> codes;
 		LocalDate date;
@@ -272,31 +378,16 @@ public class TurtleRepositoryImpDzh implements TurtleRepository{
 			}
 		}
 		
-		FileUtil.writeTextFile(dailyTop100, sb.toString(), false);
+		FileUtil.writeTextFile(dailyTop100File, sb.toString(), false);
 		
 	}
 
-	private void initAvaTops() {
-		avaTops = new HashMap<LocalDate,List<String>>();
-		String[] lines = FileUtil.readTextFile(avaTop50).split("\n");
-		String[] columns;
-		List<String> codes;
-		LocalDate date;
-		for(String line : lines) {
-			columns = line.split(",");
-			codes = new ArrayList<String>();
-			date = LocalDate.parse(columns[0],DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-			for(int i=1; i<columns.length; i++) {
-				codes.add(columns[i]);
-			}
-			avaTops.put(date, codes);				
-		}
-	}
+
 	
 	@Override
 	public Map<LocalDate, List<String>> getAvaTops(Integer top, LocalDate beginDate, LocalDate endDate) {
 		Map<LocalDate,List<String>> tops = new HashMap<LocalDate,List<String>>();
-		String[] lines = FileUtil.readTextFile(avaTop50).split("\n");
+		String[] lines = FileUtil.readTextFile(avaTop50File).split("\n");
 		String[] columns;
 		List<String> codes;
 		LocalDate date;
@@ -314,29 +405,7 @@ public class TurtleRepositoryImpDzh implements TurtleRepository{
 		return tops;
 	}
 
-	@Override
-	public Map<String,String> getKData(String id, LocalDate date) {
-		Map<LocalDate,BarEntity> datas = this.kDatas.get(id);
-		if(datas == null) {
-			datas = this.getKdatasFromTxt(id);
-			this.kDatas.put(id, datas);	
-		}
-		Map<String,String> kData = null;
 
-		BarEntity bar = datas.get(date);
-		if(bar!=null) {
-			kData = new HashMap<String,String>();
-			kData = new HashMap<String,String>();
-			kData.put("id", id);
-			kData.put("date", date.toString());
-			kData.put("open", bar.getOpen().toString());
-			kData.put("high", bar.getHigh().toString());
-			kData.put("low", bar.getLow().toString());
-			kData.put("close", bar.getClose().toString());
-		}
-		//System.out.println("kDatas.size = " + this.kDatas.size());
-		return kData;
-	}
 	
 	private Map<LocalDate,BarEntity> getKdatasFromTxt(String id){
 		Map<LocalDate,BarEntity> datas = new HashMap<LocalDate,BarEntity>();
@@ -379,7 +448,7 @@ public class TurtleRepositoryImpDzh implements TurtleRepository{
 	@Override
 	public Set<String> getDailyTopIds(Integer top, LocalDate beginDate, LocalDate endDate) {
 		Set<String> codes = new HashSet<String>();
-		String[] lines = FileUtil.readTextFile(dailyTop100).split("\n");
+		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
 		String[] columns;
 		LocalDate date;
 		for(String line : lines) {
@@ -560,15 +629,11 @@ public class TurtleRepositoryImpDzh implements TurtleRepository{
 			}
 		}
 		
-		FileUtil.writeTextFile(avaTop50, sb.toString(), false);
+		FileUtil.writeTextFile(avaTop50File, sb.toString(), false);
 		
 	}
 
 
-	@Override
-	public List<String> getAvaTops(Integer top, LocalDate date) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 }

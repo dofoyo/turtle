@@ -1,8 +1,8 @@
-package com.rhb.turtle.service;
+package com.rhb.turtle.simulation.service;
 
 import java.util.Map;
 
-public interface TurtleService {
+public interface TurtleSimulationService {
 	/*
 	 * 以所有的沪深A股为标的进行历史数据测试
 	 * 返回测试详细数据
@@ -33,28 +33,26 @@ public interface TurtleService {
 	
 	
 	/*
-	 * 步骤：
-	 * 1、初始化：
-	 * 	1.1、获得最新的top100和操作记录account，
-	 * 	1.2、补充top100和account所包含item的最近300天的K线数据
-	 * 	1.3、根据k线数据生成当日tops
-	 * 	1.4、根据当日tops和account生成当日items
-	 * 2、进入无限循环
-	 * 	2.1、判断今天是否是交易日，是否在交易时段（9:30 -- 11:30, 13:00 -- 15:00）
-	 * 		2.1.1、在交易时段
-	 * 			2.1.2.1、获得当日items的当时最新市场数据，
-	 * 			2.1.2.2、根据最新市场数据实施open、stop、close操作，保存操作数据account
-	 *  		2.1.2.3、循环
+	 * 每天上午9:00启动
+	 * 0、判断今天是否是交易日，不是交易日退出
+	 * 1、初始数据准备
+	 * 	1.1、获得上一个交易日收盘后生成的article.txt，
+	 * 	1.2、获得article.txt所列的股票的近几天的K线数据，天数与openduration一致
+	 * 2、根据article.txt进入无限循环
+	 * 		2.1、在交易时段（9:30 -- 11:30, 13:00 -- 15:00）
+	 * 			2.1.1、获得当日items的当时最新市场数据，
+	 * 			2.1.2、根据最新市场数据实施open、stop、close操作，保存操作数据account
+	 *  		2.1.3、15:05前，继续循环，15:05后，结束循环，退出系统
 	 * 
 	 */
 	public void operate();
 	
 	/*
-	 * 每天下午16点开始
-	 * 获得当天top100和操作记录account
-	 * 完善top100和account所包含item的最近300天K线数据
-	 * 根据k线数据生成tops
-	 * 根据tops和account生成items
+	 * 每天下午16点启动
+	 * 获得dailyTop100和操作记录account
+	 * 下载完善dailyTop100所包含article的最近300天K线数据
+	 * 根据300天k线数据生成avaTop50
+	 * 根据avaTop50和account生成article.txt
 	 */
 	public void doClosingWork(Integer top);
 	

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Kbar {
+	private String articleID;
 	private LocalDate date;
 	private BigDecimal open;
 	private BigDecimal high;
@@ -11,8 +12,17 @@ public class Kbar {
 	private BigDecimal close;
 	private BigDecimal tr; // 波动幅度
 	
+	public Kbar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close) {
+		this.articleID = articleID;
+		this.date = date;
+		this.open = open;
+		this.high = high;
+		this.low = low;
+		this.close = close;
+	}
 	
-	public Kbar(LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
+	public Kbar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
+		this.articleID = articleID;
 		this.date = date;
 		this.open = open;
 		this.high = high;
@@ -58,6 +68,14 @@ public class Kbar {
 
 	public void setTr(BigDecimal tr) {
 		this.tr = tr;
+	}
+
+	public String getArticleID() {
+		return articleID;
+	}
+
+	public void setArticleID(String articleID) {
+		this.articleID = articleID;
 	}
 
 }

@@ -95,36 +95,30 @@ public class Fund {
 				cash = cash.add(closeOrder.getAmount()); //卖出时，现金增加
 				value = value.subtract(closeOrder.getAmount());		//市值减少
 				it.remove();
-				//onHands.remove(closeOrder.getOrderID());
 				close_his.put(closeOrder.getOrderID(), closeOrder);
 				endDate = date;
 			}
 		}
 	}
 	
-	public void stop(String articleID, LocalDate date, BigDecimal price) {
+	public void stop(Kbar bar) {
 		Order openOrder;
 		for(Iterator<Map.Entry<String, Order>> it=onHands.entrySet().iterator(); it.hasNext();) {
 			openOrder = it.next().getValue();
-			if(openOrder.getArticleID().equals(articleID)) {
-				/*if(openOrder.getArticleID().equals("sh600804")) {
-					System.out.println(openOrder);
-					System.out.println(date + " market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1));
-				}*/
-				if(price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
-					String msg = date + " stop price is " + openOrder.getStopPrice() + ", market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1);
+			if(openOrder.getArticleID().equals(bar.getArticleID())) {
+				if(bar.getLow().compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
+					String msg =  bar.getArticleID() + "," + bar.getDate() + ", 盘中最低价" + bar.getLow() + "跌破止损价" + openOrder.getStopPrice() + ", 止损！！！";
 					System.out.println(msg);
 					logger.warn(msg);
 					
-					Order closeOrder = new Order(openOrder.getOrderID(),date,price,openOrder.getQuantity());
+					Order closeOrder = new Order(openOrder.getOrderID(),bar.getDate(),bar.getClose(),openOrder.getQuantity());
 					closeOrder.setNote("stop");
 					
 					cash = cash.add(closeOrder.getAmount()); //卖出时，现金增加
 					value = value.subtract(closeOrder.getAmount());		//市值减少	
 					it.remove();
-					//onHands.remove(closeOrder.getOrderID()); 
 					close_his.put(closeOrder.getOrderID(), closeOrder);
-					endDate = date;
+					endDate = bar.getDate();
 				}
 			}
 		}

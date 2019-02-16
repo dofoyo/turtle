@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,27 +39,81 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 	
 	Map<String,Map<LocalDate,BarEntity>> kDatas = new HashMap<String,Map<LocalDate,BarEntity>>();
 
+
 	@Override
-	public List<String> getArticleIDs(){
-		List<String> ids = new ArrayList<String>();
-		String[] strs = FileUtil.readTextFile(articleFile).split(",");
-		for(String str : strs) {
-			ids.add(str);
+	public List<String> getNvaTopIds(Integer top, LocalDate date, Integer duration) {
+		List<String> nvas = new ArrayList<String>();
+
+		List<Tunnel> tunnels = new ArrayList<Tunnel>();
+		List<String> topIds = this.getAvaTopIds(50, date);
+		
+		//System.out.println("date: " + date);
+		//System.out.println("top: " + top);
+		//System.out.println("duration: " + duration);
+		
+		if(topIds==null) return null;
+		
+		for(String id : topIds) {
+			tunnels.add(getTunnel(id,date,duration));
 		}
-		return ids;
+		
+		Collections.sort(tunnels, new Comparator<Tunnel>() {
+
+			@Override
+			public int compare(Tunnel o1, Tunnel o2) {
+				return o1.getWidth().compareTo(o2.getWidth());
+			}
+			
+		});
+		
+		for(int i=0; i<tunnels.size() && i<top; i++) {
+			//System.out.println(tunnels.get(i).getId() + "," + tunnels.get(i).getWidth());
+			nvas.add(tunnels.get(i).getId());
+		}
+		return nvas;
 	}
 	
-	@Override
-	public List<String> getLatestDailyTopIds() {
-		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
-		String[] columns = lines[lines.length-1].split(",");
-		List<String> ids = new ArrayList<String>();
-		for(int i=1; i<columns.length; i++) {
-			ids.add(columns[i]);
+	class Tunnel{
+		private String id;
+		private BigDecimal width;
+		public Tunnel(String id, BigDecimal width) {
+			this.id = id;
+			this.width = width;
 		}
-		return ids;
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+		public BigDecimal getWidth() {
+			return width;
+		}
+		public void setWidth(BigDecimal width) {
+			this.width = width;
+		}
 	}
-
+	
+	private Tunnel getTunnel(String id, LocalDate date, Integer duration) {
+		BigDecimal high = new BigDecimal(0);
+		BigDecimal low = new BigDecimal(100000);
+		LocalDate theDate = LocalDate.parse(date.toString());
+		Map<String,String> kdata;
+		for(int i=0; i<duration; ) {
+			kdata = getKData(id, theDate);
+			
+			if(kdata!=null) {
+				if(high.compareTo(new BigDecimal(kdata.get("high")))==-1) high=new BigDecimal(kdata.get("high"));
+				if(low.compareTo(new BigDecimal(kdata.get("low")))==1) low=new BigDecimal(kdata.get("low"));
+				i++;
+			}
+			theDate = theDate.minusDays(1);
+		}
+		return new Tunnel(id,high.subtract(low).divide(low,BigDecimal.ROUND_HALF_UP));
+	}
+	
+	
+	
 	@Override
 	public List<String> getAvaTopIds(Integer top, LocalDate date) {
 		if(avaTopIds == null) {
@@ -108,16 +163,16 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		avaTopIds = new HashMap<LocalDate,List<String>>();
 		String[] lines = FileUtil.readTextFile(avaTop50File).split("\n");
 		String[] columns;
-		List<String> codes;
+		List<String> ids;
 		LocalDate date;
 		for(String line : lines) {
 			columns = line.split(",");
-			codes = new ArrayList<String>();
+			ids = new ArrayList<String>();
 			date = LocalDate.parse(columns[0],DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 			for(int i=1; i<columns.length; i++) {
-				codes.add(columns[i]);
+				ids.add(columns[i]);
 			}
-			avaTopIds.put(date, codes);				
+			avaTopIds.put(date, ids);				
 		}
 	}
 
@@ -125,16 +180,16 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		dailyTopIds = new HashMap<LocalDate,List<String>>();
 		String[] lines = FileUtil.readTextFile(dailyTop100File).split("\n");
 		String[] columns;
-		List<String> codes;
+		List<String> ids;
 		LocalDate date;
 		for(String line : lines) {
 			columns = line.split(",");
-			codes = new ArrayList<String>();
+			ids = new ArrayList<String>();
 			date = LocalDate.parse(columns[0],DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 			for(int i=1; i<columns.length; i++) {
-				codes.add(columns[i]);
+				ids.add(columns[i]);
 			}
-			dailyTopIds.put(date, codes);				
+			dailyTopIds.put(date, ids);				
 		}
 	}
 	
@@ -632,6 +687,8 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		FileUtil.writeTextFile(avaTop50File, sb.toString(), false);
 		
 	}
+
+
 
 
 

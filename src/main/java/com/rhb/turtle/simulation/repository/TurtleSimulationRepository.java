@@ -10,8 +10,13 @@ public interface TurtleSimulationRepository {
 	public Map<String,String> getKData(String id, LocalDate date);
 	public List<String> getAvaTopIds(Integer top,LocalDate date);
 	public List<String> getDailyTopIds(Integer top,LocalDate date);
-	public List<String> getLatestDailyTopIds();
-	public List<String> getArticleIDs();
+	
+	/*
+	 * 获得在一段时间内，最高价和最低价距离最小的股票id。
+	 * 感觉这类股票一直在横盘整理，等待突破
+	 * 
+	 */
+	public List<String> getNvaTopIds(Integer top,LocalDate date, Integer duration);
 	//---------------------------------
 	
 	public List<Map<String,String>> getKDatas(LocalDate date, Integer top);

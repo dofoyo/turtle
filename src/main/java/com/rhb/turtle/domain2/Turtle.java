@@ -69,9 +69,7 @@ public class Turtle {
 		return fund.getArticleIDsOfOnHand();
 	}
 	
-	public String doit(Map<String,String> kData) {
-		StringBuffer sb = new StringBuffer();
-		
+	public void doit(Map<String,String> kData) {
 		Kbar bar = getKbar(kData);
 		
 		Article article = articles.get(bar.getArticleID());
@@ -81,15 +79,13 @@ public class Turtle {
 		}
 		
 		//止损
-		doStop(bar.getDate(), article.getArticleID(), bar.getClose());
+		doStop(bar);
 		
 		//平仓
-		doClose(bar.getDate(), article, closeDuration, bar.getClose());
+		doClose(bar, closeDuration);
 		
 		//开新仓、加仓
-		doOpen(bar.getDate(), article, openDuration, bar.getClose());
-		
-		return sb.toString();
+		doOpen(bar, openDuration);
 	}
 	
 	public void addBar(Map<String,String> kData) {
@@ -120,44 +116,43 @@ public class Turtle {
 	
 	
 	//止损
-	private void doStop(LocalDate date, String articleID, BigDecimal price){
-		fund.stop(articleID, date, price);
+	private void doStop(Kbar bar){
+		fund.stop(bar);
 	}
 	
-	
 	//平仓
-	private void doClose(LocalDate date, Article article, Integer closeDuration, BigDecimal price) {
+	private void doClose(Kbar bar, Integer closeDuration) {
+		Article article = articles.get(bar.getArticleID());
 		Integer lots = fund.getLots(article.getArticleID());
 		if(lots != 0) { //有持仓
-			boolean flag = article.closePing(price, lots, closeDuration);
+			boolean flag = article.closePing(bar, lots, closeDuration);
 			if(flag) {  //触发平仓
-				fund.close(article.getArticleID(), date, price);
+				fund.close(article.getArticleID(), bar.getDate(), bar.getClose());
 			}
 		}
 	}
 	
 	//开仓
-	private void doOpen(LocalDate date, Article article, Integer openDuration, BigDecimal price) {
+	private void doOpen(Kbar bar, Integer openDuration) {
+		Article article = articles.get(bar.getArticleID());
 		Order openOrder = null;
-		Integer flag = article.openPing(price, openDuration);
+		Integer flag = article.openPing(bar, openDuration);
 		if(flag != null) {
 			Integer lots = fund.getLots(article.getArticleID());
 			BigDecimal atr = article.getATR(openDuration);
-			
 			if(flag==1 && lots==0) { //初次开多仓
-
-				BigDecimal stopPrice = price.subtract(atr);
-				BigDecimal reopenPrice = price.add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-				openOrder = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	date, 1, price,	stopPrice,	reopenPrice	);
+				BigDecimal stopPrice = bar.getClose().subtract(atr);
+				BigDecimal reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
+				openOrder = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
 				openOrder.setNote("open");
 			}
 			
 			if(flag==1 && lots>0 && lots<maxOfLot) {  //加开多仓
 				BigDecimal reopenPrice = fund.getReopenPrice(article.getArticleID());
-				if(price.compareTo(reopenPrice)==1) {
-					BigDecimal stopPrice = price.subtract(atr);
-					reopenPrice = price.add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-					openOrder = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	date, 1, price,	stopPrice,	reopenPrice	);
+				if(bar.getHigh().compareTo(reopenPrice)==1) {
+					BigDecimal stopPrice = bar.getClose().subtract(atr);
+					reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
+					openOrder = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
 					openOrder.setNote("reOpen");
 				}
 			}

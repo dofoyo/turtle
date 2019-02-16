@@ -93,27 +93,31 @@ public class Article {
 	 * 返回-1，开空仓
 	 * 返回null,不开仓
 	 */
-	public Integer openPing(BigDecimal price, Integer openDuration) {
+	public Integer openPing(Kbar bar, Integer openDuration) {
 		if(this.bars.size()>=openDuration) {
 			BigDecimal[] highestAndLowest = getHighestAndLowest(openDuration);
 			BigDecimal highest = highestAndLowest[0];
 			BigDecimal lowest = highestAndLowest[1];
+			//System.out.println(this.bars);
+			//System.out.println("highest:" + highest + ",lowest:" + lowest);
 			
 			//突破高点，上涨势头，买多
-			if(price.compareTo(highest)>0) {
-				String msg = "现价" + price + "突破" + openDuration + "天高点" + highest + ",开多仓！！";
+			if(bar.getHigh().compareTo(highest)>0) {
+				//System.out.println(articleID + "," + openDuration +"天高点" + highest);
+				//System.out.println(this.bars);
+				String msg = articleID + "," + bar.getDate() + ", 盘中最高价格" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + ",开多仓！！";
 				System.out.println(msg);
 				logger.warn(msg);
 				return 1;
 			}
-			
+			/*
 			//突破低点，下跌势头，卖空
 			if(price.compareTo(lowest)<0) {
-				String msg = "现价" + price + "突破" + openDuration + "天低点" + highest + ",开空仓！！";
+				String msg = articleID + "盘中最低价格" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + ",开空仓！！";
 				System.out.println(msg);
 				logger.warn(msg);
 				return -1;
-			}
+			}*/
 		}
 		return null;
 	}
@@ -159,23 +163,23 @@ public class Article {
 	/*
 	 * 退出判断
 	 */
-	public boolean closePing(BigDecimal price, Integer d, Integer openDuration) {
+	public boolean closePing(Kbar bar, Integer d, Integer openDuration) {
 		if(this.bars.size()>=openDuration) {
 			BigDecimal[] keyValues = getHighestAndLowest(openDuration);
 			BigDecimal highest = keyValues[0];
 			BigDecimal lowest = keyValues[1];
 
 			//持有空头头寸，突破高点，上涨势头，平仓
-			if(d<0 && price.compareTo(highest)>0) {
-				String msg = "持有空头，但现价" + price + "突破" + openDuration + "天高点" + highest + ",立即平仓！！";
+			if(d<0 && bar.getHigh().compareTo(highest)>0) {
+				String msg = "持有" + articleID + "空头，但盘中最高价" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + ",立即平仓！！";
 				System.out.println(msg);
 				logger.warn(msg);
 				return true;
 			}
 			
 			//持有多头头寸，突破低点，下跌趋势，平仓
-			if(d>0 && price.compareTo(lowest)<0) {
-				String msg = "\"持有多头，但现价\" + price + \"突破\" + openDuration + \"天低点\" + lowest + \",立即平仓！！\"";
+			if(d>0 && bar.getLow().compareTo(lowest)<0) {
+				String msg = "持有" + articleID + "多头，但盘中最低价" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + ",立即平仓！！";
 				System.out.println(msg);
 				logger.warn(msg);
 				return true;

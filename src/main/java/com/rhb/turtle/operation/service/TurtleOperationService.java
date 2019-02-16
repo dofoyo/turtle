@@ -3,6 +3,13 @@ package com.rhb.turtle.operation.service;
 import java.util.Map;
 
 public interface TurtleOperationService {
+	/*
+	 * 待检验的选股思路
+	 * 1、选择通道最窄的
+	 * 2、gulex选出的
+	 * 3、按5分钟线进行simulate
+	 */
+	
 	
 	/*
 	 * 每天上午9:00启动

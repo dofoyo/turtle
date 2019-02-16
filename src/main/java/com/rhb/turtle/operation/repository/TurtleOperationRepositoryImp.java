@@ -1,5 +1,8 @@
 package com.rhb.turtle.operation.repository;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -7,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,41 +39,53 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	public List<Map<String,String>> getKDatas(String id) {
 		List<Map<String,String>> kDatas = new ArrayList<Map<String,String>>();
 
-		String file = this.kDataPath + "/" + id + ".txt";		
-		//System.out.println(file);
-		
-		String[] lines = FileUtil.readTextFile(file).split("\n");
-		
-		Integer length = lines.length;
-		String[] columns;
-		Map<String,String> kData;
-		BigDecimal open;
-		BigDecimal high;
-		BigDecimal low;
-		BigDecimal close;
-		BigDecimal factor;
-		
-		for(int i=length-1; i>0; i--) {
-			columns = lines[i].split(",");
-			
-			open = new BigDecimal(columns[1]);
-			high = new BigDecimal(columns[2]);
-			low = new BigDecimal(columns[4]);
-			close = new BigDecimal(columns[3]);
-			factor = new BigDecimal(columns[7]);
-			
-			kData = new HashMap<String,String>();
-			kData.put("id", id);
-			kData.put("date", columns[0]);
-			kData.put("open", open.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_DOWN).toString());
-			kData.put("high", high.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_DOWN).toString());
-			kData.put("low", low.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_DOWN).toString());
-			kData.put("close", close.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_DOWN).toString());
-			
-			kDatas.add(kData);
+		File dir = new File(this.kDataPath);
+		FileFilter fileFilter = new WildcardFileFilter(id + "*.txt");
+		File[] files = dir.listFiles(fileFilter);
+		for (int i = 0; i < files.length; i++) {
+			kDatas.addAll(toKDatas(id,files[i]));
+		}
+		return kDatas;
+	}
+	
+	
+	
+	
+	
+	private List<Map<String,String>> toKDatas(String id, File file){
+		List<Map<String,String>> kDatas = new ArrayList<Map<String,String>>();
+		List<String> lines;
+		try {
+			lines = FileUtils.readLines(file, "UTF-8");
+			Integer length = lines.size();
+			for(int i=length-1; i>0; i--) {
+				kDatas.add(toKData(id,lines.get(i)));
+			}			
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
 		return kDatas;
+	}
+	
+	private Map<String, String> toKData(String id, String line){
+		String[] columns = line.split(",");
+		
+		Map<String,String> kData = new HashMap<String,String>();
+		BigDecimal open = new BigDecimal(columns[1]);
+		BigDecimal high = new BigDecimal(columns[2]);
+		BigDecimal low = new BigDecimal(columns[4]);
+		BigDecimal close = new BigDecimal(columns[3]);
+		BigDecimal factor = new BigDecimal(columns[7]);
+		
+		kData.put("id", id);
+		kData.put("date", columns[0]);
+		kData.put("open", open.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+		kData.put("high", high.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+		kData.put("low", low.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+		kData.put("close", close.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
+			
+		return kData;
 	}
 	
 }

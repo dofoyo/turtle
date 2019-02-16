@@ -1,30 +1,30 @@
-package com.rhb.turtle.operation.service;
+package com.rhb.turtle.operation.spider;
+
+import java.time.LocalDate;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.rhb.turtle.simulation.spider.MarketInfoSimulationSpider;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 @ActiveProfiles("dev2")
-public class TurtleOperationServiceTest {
+public class MarketInfoOperationSpiderTest {
 	@Autowired
-	@Qualifier("turtleOperationServiceImp")
-	TurtleOperationService ts;
+	@Qualifier("marketInfoOperationSpiderImp")
+	MarketInfoOperationSpider marketInfoOperationSpider;
+	
 	
 	@Test
-	public void operate() {
-		ts.operate();
-	}
-	
-	//@Test
-	public void downKdatas() {
-		ts.doClosingWork(10);
+	public void getLatestDate() {
+		marketInfoOperationSpider.downLatestDailyTop100();
 		System.out.println("done");
 	}
 	

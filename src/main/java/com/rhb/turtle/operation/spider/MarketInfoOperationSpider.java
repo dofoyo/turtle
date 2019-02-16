@@ -1,6 +1,7 @@
 package com.rhb.turtle.operation.spider;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 public interface MarketInfoOperationSpider {
@@ -12,8 +13,8 @@ public interface MarketInfoOperationSpider {
 	 */
 	public Map<String,String> getLatestMarketData(String id);
 	
-	public void downLatestDailyTop100();
+	public List<String> downLatestDailyTop100();
 	
-	public void downKdata(String id);
+	public void downKdatas(String id);
 
 }

@@ -3,12 +3,13 @@ package com.rhb.turtle.domain2;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Article {
+	protected static final Logger logger = LoggerFactory.getLogger(Article.class);
 	private String articleID;
 	
 	
@@ -20,6 +21,10 @@ public class Article {
 	public Article(String articleID) {
 		this.articleID = articleID;
 		this.bars = new ArrayList<Kbar>();
+	}
+	
+	public List<Kbar> getKbars(){
+		return bars;
 	}
 	
 	public Kbar addBar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,Integer openDuration) {
@@ -96,13 +101,17 @@ public class Article {
 			
 			//突破高点，上涨势头，买多
 			if(price.compareTo(highest)>0) {
-				System.out.println("现价" + price + "突破" + openDuration + "天高点" + highest + ",开多仓！！");
+				String msg = "现价" + price + "突破" + openDuration + "天高点" + highest + ",开多仓！！";
+				System.out.println(msg);
+				logger.warn(msg);
 				return 1;
 			}
 			
 			//突破低点，下跌势头，卖空
 			if(price.compareTo(lowest)<0) {
-				System.out.println("现价" + price + "突破" + openDuration + "天低点" + highest + ",开空仓！！");
+				String msg = "现价" + price + "突破" + openDuration + "天低点" + highest + ",开空仓！！";
+				System.out.println(msg);
+				logger.warn(msg);
 				return -1;
 			}
 		}
@@ -158,77 +167,23 @@ public class Article {
 
 			//持有空头头寸，突破高点，上涨势头，平仓
 			if(d<0 && price.compareTo(highest)>0) {
-				System.out.println("持有空头，但现价" + price + "突破" + openDuration + "天高点" + highest + ",立即平仓！！");
+				String msg = "持有空头，但现价" + price + "突破" + openDuration + "天高点" + highest + ",立即平仓！！";
+				System.out.println(msg);
+				logger.warn(msg);
 				return true;
 			}
 			
 			//持有多头头寸，突破低点，下跌趋势，平仓
 			if(d>0 && price.compareTo(lowest)<0) {
-				System.out.println("持有多头，但现价" + price + "突破" + openDuration + "天低点" + lowest + ",立即平仓！！");
+				String msg = "\"持有多头，但现价\" + price + \"突破\" + openDuration + \"天低点\" + lowest + \",立即平仓！！\"";
+				System.out.println(msg);
+				logger.warn(msg);
 				return true;
 			}			
 		}
 		return false;
 	}
 	
-	//----------------------------------
-	
-
-
-	
-
-
-/*	
-	public Kbar addBar(LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,Integer openDuration) {
-		Kbar bar=null;
-		if(this.bars.size()==0) {
-			//bar = new Bar2(date,open,high,low,close,this.getTR(high, low, close));
-			//this.bars.add(bar);
-			return bar;
-		}
-		
-		bar = this.getBarByDate(date);
-		if(bar == null) {
-			Kbar preBar = this.bars.get(this.bars.size()-1);
-			BigDecimal preClose = preBar.getClose();
-			BigDecimal tr = getTR(high,low,preClose);
-			//bar = new Bar2(date,open,high,low,close,tr);
-			//System.out.println(bar);
-			this.bars.add(bar);
-			if(this.bars.size()>openDuration) {
-				this.bars.remove(0);
-			}
-		}else{
-			BigDecimal tr;
-			if(this.bars.size()>1) {
-				Kbar preBar = this.bars.get(this.bars.size()-2);
-				BigDecimal preClose = preBar.getClose();
-				tr = getTR(high,low,preClose);
-			}else {
-				tr = getTR(high,low,close);
-			}
-			bar.setHigh(high);
-			bar.setLow(low);
-			bar.setOpen(open);
-			bar.setClose(close);
-			bar.setTr(tr);			
-		}
-		return bar;
-	}
-	*/	
-
-	
-
-	
-
-
-	public BigDecimal getLatestClosePrice() {
-		if(bars.size()>0) {
-			return bars.get(bars.size()-1).getClose();
-		}else {
-			return null;
-		}
-	}
 
 	public String getArticleID() {
 		return articleID;

@@ -15,7 +15,6 @@ import com.rhb.turtle.simulation.spider.MarketInfoSimulationSpider;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
-@ActiveProfiles("dev2")
 public class MarketInfoSimulationSpiderTest {
 	@Autowired
 	@Qualifier("marketInfoSimulationSpiderImp")

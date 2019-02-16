@@ -78,4 +78,10 @@ public class Kbar {
 		this.articleID = articleID;
 	}
 
+	@Override
+	public String toString() {
+		return "Kbar [articleID=" + articleID + ", date=" + date + ", open=" + open + ", high=" + high + ", low=" + low
+				+ ", close=" + close + ", tr=" + tr + "]";
+	}
+
 }

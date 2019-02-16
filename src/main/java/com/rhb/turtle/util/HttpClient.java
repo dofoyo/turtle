@@ -41,6 +41,15 @@ public class HttpClient {
 
 			// 创建http GET请求
 			HttpGet httpGet = new HttpGet(uri);
+			httpGet.setHeader("Accept", "Accept text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");    
+			httpGet.setHeader("Accept-Charset", "GB2312,utf-8;q=0.7,*;q=0.7");    
+			httpGet.setHeader("Accept-Encoding", "gzip, deflate");    
+			httpGet.setHeader("Accept-Language", "zh-cn,zh;q=0.5");    
+			httpGet.setHeader("Connection", "keep-alive");    
+			httpGet.setHeader("Cookie", "__utma=226521935.73826752.1323672782.1325068020.1328770420.6;");  
+	        httpGet.setHeader("Host", "https://www.sina.com.cn/");  
+	        httpGet.setHeader("refer", "https://www.sina.com.cn/");  
+			httpGet.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; rv:6.0.2) Gecko/20100101 Firefox/6.0.2");   
 
 			// 执行请求
 			response = httpclient.execute(httpGet);

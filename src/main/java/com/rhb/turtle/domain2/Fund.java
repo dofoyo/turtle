@@ -10,7 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rhb.turtle.operation.service.TurtleOperationServiceImp;
+
 public class Fund {
+	protected static final Logger logger = LoggerFactory.getLogger(Fund.class);
+
 	private BigDecimal cash;
 	private BigDecimal initCash;
 	private BigDecimal value = new BigDecimal(0);
@@ -105,7 +112,9 @@ public class Fund {
 					System.out.println(date + " market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1));
 				}*/
 				if(price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
-					System.out.println(date + " stop price is " + openOrder.getStopPrice() + ", market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1));					
+					String msg = date + " stop price is " + openOrder.getStopPrice() + ", market price is " + price + ", should stop? " + (price.compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1);
+					System.out.println(msg);
+					logger.warn(msg);
 					
 					Order closeOrder = new Order(openOrder.getOrderID(),date,price,openOrder.getQuantity());
 					closeOrder.setNote("stop");

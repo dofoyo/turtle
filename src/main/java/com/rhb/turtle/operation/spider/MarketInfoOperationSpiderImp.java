@@ -2,9 +2,12 @@ package com.rhb.turtle.operation.spider;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.rhb.turtle.util.FileUtil;
 import com.rhb.turtle.util.HttpClient;
+import com.rhb.turtle.util.ParseString;
 
 @Service("marketInfoOperationSpiderImp")
 public class MarketInfoOperationSpiderImp implements MarketInfoOperationSpider {
@@ -68,44 +72,64 @@ public class MarketInfoOperationSpiderImp implements MarketInfoOperationSpider {
 
 
 	@Override
-	public void downLatestDailyTop100() {
-		String strUrl = "http://q.jrjimg.cn/?q=cn|s|sa&c=s,ta,tm,sl,cot,cat,ape&n=hqa&o=tm,d&p=1100&_dc=1549936839524";
-		System.out.println(strUrl);
+	public List<String> downLatestDailyTop100() {
+		List<String> ids = new ArrayList<String>();
+		String strUrl = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery112403517194352564321_1550228468554&type=CT&token=4f1862fc3b5e77c150a2b985b12db0fd&sty=FCOIATC&js=(%7Bdata%3A%5B(x)%5D%2CrecordsFiltered%3A(tot)%7D)&cmd=C._A&st=(Amount)&sr=-1&p=1&ps=100&_=1550228468980";
+		//System.out.println(strUrl);
 		String result = HttpClient.doGet(strUrl);
 		//System.out.println(result);
+		List<String> strs = ParseString.subStrings(result, "\"|\"");
+		String ss;
+		String code;
 		StringBuffer sb = new StringBuffer();
-		if(result != null) {
-			String[] lines = result.split("\n");
-			for(int i=4; i<54; i++) {
-				//System.out.println(lines[i]);
-				//System.out.println(lines[i].substring(2, 10));
-				sb.append(lines[i].substring(2, 10));
-				if(i<54) {
-					sb.append(",");
-				}
-			}
+		for(String str : strs) {
+			ss = str.substring(0,1).equals("1") ? "sh" : "sz";
+			code = str.substring(2,8);
+			//System.out.println(ss + code);
+			sb.append(ss + code);
+			sb.append(",");
+			ids.add(ss + code);
 		}
-		FileUtil.writeTextFile(dailyTop100File, sb.toString(), true);
-
+		sb.deleteCharAt(sb.length()-1);
+		FileUtil.writeTextFile(dailyTop100File, sb.toString(), false);
+		
+		return ids;
 	}
 
 
 	@Override
-	public void downKdata(String id) {
-		String strUrl = "http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/CODE.phtml?year=YEAR&jidu=JIDU";
+	public void downKdatas(String id) {
 		String code = id.substring(2);
-		String year = "2019";
-		String jidu = "1";
+
+		LocalDate today = LocalDate.now();
+		String year = String.valueOf(today.getYear());
+		String jidu = String.valueOf(today.getMonthValue()/3 + 1);
+		
+		//String year = "2018";
+		//String jidu = "1";
+		
+		String strUrl = "http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/CODE.phtml?year=YEAR&jidu=JIDU";
 		strUrl = strUrl.replace("CODE", code);
 		strUrl = strUrl.replace("YEAR", year);
 		strUrl = strUrl.replace("JIDU", jidu);
-		String file = kDataPath + "/" + code + ".txt";
+		String file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
 		System.out.println(file);
 		
 		try {
 			//String str = HttpClient.doGet(strUrl);
 			//System.out.println(str);
-			Document doc = Jsoup.connect(strUrl).get();
+			
+	        Connection connect = Jsoup.connect(strUrl);
+	        Map<String, String> header = new HashMap<String, String>();
+	        header.put("Host", "http://www.sina.com.cn");
+	        header.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:5.0) Gecko/20100101 Firefox/5.0");
+	        header.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+	        header.put("Accept-Language", "zh-cn,zh;q=0.5");
+	        header.put("Accept-Charset", "GB2312,utf-8;q=0.7,*;q=0.7");
+	        header.put("Connection", "keep-alive");
+	        Connection data = connect.headers(header);
+			
+			Document doc = data.get();
 			Element table = doc.getElementById("FundHoldSharesTable");
 			Elements trs = table.select("tr");
 			Elements tds;
@@ -119,16 +143,16 @@ public class MarketInfoOperationSpiderImp implements MarketInfoOperationSpider {
 				}
 				if(sb.length()>0)	sb.append("\n");
 			}
-			System.out.println(sb.toString());
+			//System.out.println(sb.toString());
 			
 			FileUtil.writeTextFile(file, sb.toString(), false);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-
 	}
+	
+	
 	
 	
 	

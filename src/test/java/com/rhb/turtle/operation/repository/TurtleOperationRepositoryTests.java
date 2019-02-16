@@ -30,7 +30,7 @@ public class TurtleOperationRepositoryTests {
 		}
 	}
 	
-	@Test
+	//@Test
 	public void getDailyTopCodes() {
 		List<String> ids = tr.getArticleIDs();
 		int i=1;
@@ -43,6 +43,18 @@ public class TurtleOperationRepositoryTests {
 				System.out.println(kdata);
 			}
 		}
+	}
+	
+	
+	@Test
+	public void getKDatas() {
+		String id = "sz000735";
+		List<Map<String,String>> kDatas = tr.getKDatas(id);
+		int i=1;
+		for(Map<String,String> kdata : kDatas) {
+			System.out.println(i++ + " -- " + kdata);
+		}
+		
 	}
 	
 }

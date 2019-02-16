@@ -51,6 +51,10 @@ public class Turtle {
 		articles = new HashMap<String,Article>();
 	}
 	
+	public List<Kbar> getKbars(String articleID){
+		Article article = articles.get(articleID);
+		return article.getKbars();
+	}
 	
 	public Map<String,BigDecimal> getArticlePrices(String articleID){
 		Article article = articles.get(articleID);
@@ -65,7 +69,9 @@ public class Turtle {
 		return fund.getArticleIDsOfOnHand();
 	}
 	
-	public void doit(Map<String,String> kData) {
+	public String doit(Map<String,String> kData) {
+		StringBuffer sb = new StringBuffer();
+		
 		Kbar bar = getKbar(kData);
 		
 		Article article = articles.get(bar.getArticleID());
@@ -82,6 +88,8 @@ public class Turtle {
 		
 		//开新仓、加仓
 		doOpen(bar.getDate(), article, openDuration, bar.getClose());
+		
+		return sb.toString();
 	}
 	
 	public void addBar(Map<String,String> kData) {

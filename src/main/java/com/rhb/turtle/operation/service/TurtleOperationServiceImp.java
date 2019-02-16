@@ -10,17 +10,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.rhb.turtle.domain2.Kbar;
 import com.rhb.turtle.domain2.Turtle;
 import com.rhb.turtle.operation.repository.TurtleOperationRepository;
 import com.rhb.turtle.operation.spider.MarketInfoOperationSpider;
 
 @Service("turtleOperationServiceImp")
 public class TurtleOperationServiceImp implements TurtleOperationService {
+	protected static final Logger logger = LoggerFactory.getLogger(TurtleOperationServiceImp.class);
+
 	@Value("${reportPath}")
 	private String reportPath;
 	
@@ -70,11 +75,15 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		//获得上一个交易日收盘后生成的article.txt
 		List<String> articleIDs = turtleOperationRepository.getArticleIDs();
 		
-		//获得近几天的K线数据
+		//获得上一个交易日收盘后下载的K线数据
 		List<Map<String,String>> kDatas;
 		for(String id : articleIDs) {
 			kDatas = turtleOperationRepository.getKDatas(id);
 			turtle.addBar(kDatas);
+			/*List<Kbar> kbars = turtle.getKbars(id);
+			for(Kbar bar : kbars) {
+				System.out.println(bar);
+			}*/
 		}
 		
 		LocalDateTime start = LocalDateTime.parse(today.toString()+" 09:30:00",df);
@@ -102,6 +111,7 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 				System.out.println(line.draw());
 				
 				turtle.doit(latestKdata);
+				
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
@@ -121,8 +131,35 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 
 	@Override
 	public void doClosingWork(Integer top) {
-		//List<String> ids = turtleOperationRepository.getLatestDailyTopIds();
-		// TODO Auto-generated method stub
+		LocalDate today = LocalDate.now();
+		LocalDate theDay = marketInfoOperationSpider.getLatestMarketDate();
+		if(!today.equals(theDay)) {
+			System.out.println("NOT trade date, bye!");
+			//return;
+		}
+		LocalDateTime end = LocalDateTime.parse(today.toString() + " 15:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		LocalDateTime now = LocalDateTime.now();
+		if(now.isBefore(end)) {
+			System.out.println("NOT end of the trade, bye!");
+			//return;
+		}
+		
+		//下载dailyTop100
+		List<String> ids = marketInfoOperationSpider.downLatestDailyTop100();
+		
+		//下载最新K线数据
+		for(String id : ids) {
+			marketInfoOperationSpider.downKdatas(id);
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		
 		
 	}
 	

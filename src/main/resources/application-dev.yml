@@ -3,6 +3,8 @@ reportPath: C:/workspace/turtle-data/simulation/reports
 dailyTop100File: C:/workspace/turtle-data/simulation/dailyTop100.txt
 avaTop50File: C:/workspace/turtle-data/simulation/avaTop50.txt
 articleFile: C:/workspace/turtle-data/simulation/article.txt
+bluechipsFile: C:/workspace/turtle-data/simulation/bluechipids.txt
+
 
 
 

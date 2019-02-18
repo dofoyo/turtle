@@ -40,6 +40,8 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 	Map<LocalDate,List<String>> bluechipIds = null;
 	
 	Map<String,Map<LocalDate,BarEntity>> kDatas = new HashMap<String,Map<LocalDate,BarEntity>>();
+	Map<String,Integer> kDatasCounter = new HashMap<String,Integer>();
+	
 	Map<String,String> kDatasFile = new HashMap<String, String>();
 	
 	@Override
@@ -180,13 +182,19 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		Map<LocalDate,BarEntity> datas = this.kDatas.get(id);
 		if(datas == null) {
 			datas = this.getKdatasFromTxt(id);
+			
 			this.kDatas.put(id, datas);
+			this.kDatasCounter.put(id, 1);
+			
+			//System.out.println("kDatas.size() = " + this.kDatas.size());
+		}else {
+			this.kDatasCounter.put(id, this.kDatasCounter.get(id)+1);
+			
 		}
 		Map<String,String> kData = null;
 
 		BarEntity bar = datas.get(date);
 		if(bar!=null) {
-			kData = new HashMap<String,String>();
 			kData = new HashMap<String,String>();
 			kData.put("id", id);
 			kData.put("date", date.toString());

@@ -53,6 +53,8 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 	private Integer closeDuration = 30;
 	
 	private BigDecimal initCash = new BigDecimal(100000);
+	
+	private boolean isStop = true;
 
 	@Override
 	public void operate() {
@@ -94,7 +96,7 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		for(int i=0; ; ) {
 			now=LocalDateTime.now(); 
 
-			//if(now.isAfter(start) && now.isBefore(end)){
+			if(now.isAfter(start) && now.isBefore(end)){
 				System.out.print(now.toString() + "      ");
 				System.out.print(articleIDs.get(i) + "     ");
 
@@ -108,17 +110,17 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 				
 				System.out.println(line.draw());
 				
-				turtle.doit(latestKdata);
+				turtle.doit(latestKdata, isStop);
 				
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}			
-			//}else {
-			//	System.out.println("\ntoday' trade period is over! bye bye! have a good time!");
-			//	return;
-			//}
+			}else {
+				System.out.println("\ntoday' trade period is over! bye bye! have a good time!");
+				return;
+			}
 			
 			i++;
 			if(i==articleIDs.size()-1) i=0;
@@ -147,7 +149,7 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		
 		//下载最新K线数据
 		for(String id : ids) {
-			turtleOperationSpider.downKdatas(id);
+			//turtleOperationSpider.downKdatas(id);
 			try {
 				Thread.sleep(5000);
 			} catch (InterruptedException e) {
@@ -156,6 +158,9 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 			}
 		}
 		
+		
+		//生成avatop50
+		turtleOperationRepository.generateAvaTop50(ids);
 		
 		
 		

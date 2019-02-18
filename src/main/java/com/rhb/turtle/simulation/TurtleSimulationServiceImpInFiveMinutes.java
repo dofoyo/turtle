@@ -55,7 +55,8 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 	private Integer closeDuration = 30;
 	
 	private BigDecimal initCash = new BigDecimal(1000000);
-
+	
+	private boolean isStop = false; 
 
 	/*
 	 * 指定某一只牛股按5分钟线进行模拟
@@ -96,7 +97,7 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 					prices.put("now", new BigDecimal(fiveKData.get("close")));
 					System.out.println(Line.draw(prices));
 
-					turtle.doit(fiveKData);
+					turtle.doit(fiveKData, isStop);
 				}
 			}
 			dailyKData = turtleSimulationRepository.getDailyKData(id,date);

@@ -1,6 +1,7 @@
 package com.rhb.turtle.operation;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -17,15 +18,33 @@ import com.rhb.turtle.simulation.TurtleSimulationSpider;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 @ActiveProfiles("dev2")
-public class MarketInfoOperationSpiderTest {
+public class TurtleOperationSpiderTest {
 	@Autowired
-	@Qualifier("marketInfoOperationSpiderImp")
-	TurtleOperationSpider marketInfoOperationSpider;
+	@Qualifier("turtleOperationSpiderImp")
+	TurtleOperationSpider turtleOperationSpider;
 	
+	@Autowired
+	@Qualifier("turtleOperationRepositoryImp")
+	TurtleOperationRepository tr ;
+	
+	
+	//@Test
+	public void getLatestDate() {
+		turtleOperationSpider.downLatestDailyTop100();
+		System.out.println("done");
+	}
 	
 	@Test
-	public void getLatestDate() {
-		marketInfoOperationSpider.downLatestDailyTop100();
+	public void downKdatas() {
+		String year="2017";
+		String jidu;
+		List<String> ids = tr.getDailyTop100Ids();
+		for(String id : ids) {
+			for(int i=1; i<5; i++) {
+				turtleOperationSpider.downKdatas(id, year, Integer.toString(i));
+				try {Thread.sleep(5000);} catch (InterruptedException e) {e.printStackTrace();}
+			}
+		}
 		System.out.println("done");
 	}
 	

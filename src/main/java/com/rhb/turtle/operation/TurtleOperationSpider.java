@@ -15,6 +15,6 @@ public interface TurtleOperationSpider {
 	
 	public List<String> downLatestDailyTop100();
 	
-	public void downKdatas(String id);
+	public void downKdatas(String id, String year, String jidu);
 
 }

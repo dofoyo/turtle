@@ -3,7 +3,7 @@ package com.rhb.turtle.simulation;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class AvaBar  implements Comparable<AvaBar>{
+public class AvaBar implements Comparable<AvaBar>{
 	@Override
 	public String toString() {
 		return "BarEntity [date=" + date + ", id=" + id + ", amount=" + amount + ", ava=" + ava + "]";

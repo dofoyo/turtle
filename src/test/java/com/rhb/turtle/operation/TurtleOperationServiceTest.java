@@ -25,7 +25,7 @@ public class TurtleOperationServiceTest {
 	}
 	
 	//@Test
-	public void downKdatas() {
+	public void doClosingWork() {
 		ts.doClosingWork(10);
 		System.out.println("done");
 	}

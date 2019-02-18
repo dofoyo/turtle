@@ -18,6 +18,13 @@ public interface TurtleSimulationRepository {
 	 * 
 	 */
 	public List<String> getNvaTopIds(Integer top,LocalDate date, Integer duration);
+
+	
+	/*
+	 * 从2000-01-01 年至2019-02-11的完整的K线图中生成300日平均成交量排名前50名的股票
+	 */
+	public void generateAvaTop50();
+	
 	//---------------------------------
 	
 	public List<Map<String,String>> getKDatas(LocalDate date, Integer top);
@@ -48,10 +55,7 @@ public interface TurtleSimulationRepository {
 	 */
 	public void generateTops(Integer top, LocalDate beginDate, LocalDate endDate);
 	
-	/*
-	 * 从2000-01-01 年至2019-02-11的完整的K线图中生成300日平均成交量排名前50名的股票
-	 */
-	public void generateAvaTop50();
+
 	
 	/*
 	 * 从2000-01-01 年至2019-02-11的完整的K线图中生成每日成交量排名前100名的股票

@@ -75,7 +75,7 @@ public class Turtle {
 		return fund.getArticleIDsOfOnHand();
 	}
 	
-	public void doit(Map<String,String> kData) {
+	public void doit(Map<String,String> kData, boolean isStop) {
 		Kbar bar = getKbar(kData);
 		
 		Article article = articles.get(bar.getArticleID());
@@ -85,7 +85,9 @@ public class Turtle {
 		}
 		
 		//止损
-		//doStop(bar);
+		if(isStop) {
+			doStop(bar);
+		}
 		
 		//平仓
 		doClose(bar, closeDuration);

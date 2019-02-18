@@ -79,7 +79,7 @@ public class TurtleSimulationRepositoryTests {
 		turtleSimulationRepository.generateDailyTop100();
 	}
 	
-	//@Test
+	@Test
 	public void generateAvaTop50() {
 		turtleSimulationRepository.generateAvaTop50();
 	}
@@ -127,7 +127,7 @@ public class TurtleSimulationRepositoryTests {
 		}
 	}
 	
-	@Test
+	//@Test
 	public void getFiveKData() {
 		String id = "sh600519";
 		LocalDateTime datetime = LocalDateTime.parse("2018-01-31 09:30", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));

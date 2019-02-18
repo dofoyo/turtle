@@ -29,8 +29,8 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	@Qualifier("turtleSimulationSpiderImp")
 	TurtleSimulationSpider turtleSimulationSpider ;
 	
-	private LocalDate beginDate = LocalDate.parse("2016-01-01");
-	private LocalDate endDate = LocalDate.parse("2019-02-15");
+	private LocalDate beginDate = LocalDate.parse("2010-01-01");
+	private LocalDate endDate = LocalDate.parse("2018-09-13");
 	
 	/*
 	 * 亏损因子，默认值为1%，即买了一个品种后 ，该品种价格下跌一个atr，总资金下跌1%
@@ -50,6 +50,8 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	private Integer closeDuration = 30;
 	
 	private BigDecimal initCash = new BigDecimal(1000000);
+	
+	private boolean isStop  = false;  //是否止损
 
 
 	@Override
@@ -67,10 +69,10 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 			System.out.println(++i + "/" + days + "," + date);
 
 			//直接从dailyTop100中选前top个进行模拟 - 不止损年复合收益率8%，止损12%
-			//ids = turtleSimulationRepository.getDailyTopIds(top, date);
+			ids = turtleSimulationRepository.getDailyTopIds(top, date);
 
 			//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损年复合收益率16%，止损15%
-			ids = turtleSimulationRepository.getAvaTopIds(top, date);  
+			//ids = turtleSimulationRepository.getAvaTopIds(top, date);  
 			
 			//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损年复合收益率15%，止损14%
 			//ids = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 
@@ -96,7 +98,7 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 				for(String id : ids) {
 					kData = turtleSimulationRepository.getDailyKData(id,date);
 					if(kData!=null) {
-						turtle.doit(kData);
+						turtle.doit(kData,isStop);
 						turtle.addBar(kData);
 					}
 				}

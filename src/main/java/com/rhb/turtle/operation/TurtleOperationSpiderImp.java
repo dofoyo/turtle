@@ -98,12 +98,12 @@ public class TurtleOperationSpiderImp implements TurtleOperationSpider {
 
 
 	@Override
-	public void downKdatas(String id) {
+	public void downKdatas(String id, String year, String jidu) {
 		String code = id.substring(2);
 
 		LocalDate today = LocalDate.now();
-		String year = String.valueOf(today.getYear());
-		String jidu = String.valueOf(today.getMonthValue()/3 + 1);
+		//String year = String.valueOf(today.getYear());
+		//String jidu = String.valueOf(today.getMonthValue()/3 + 1);
 		
 		//String year = "2018";
 		//String jidu = "1";

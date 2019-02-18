@@ -48,7 +48,7 @@ public class TurtleOperationRepositoryTests {
 	}
 	
 	
-	@Test
+	//@Test
 	public void getKDatas() {
 		String id = "sz000735";
 		List<Map<String,String>> kDatas = tr.getKDatas(id);
@@ -56,7 +56,17 @@ public class TurtleOperationRepositoryTests {
 		for(Map<String,String> kdata : kDatas) {
 			System.out.println(i++ + " -- " + kdata);
 		}
-		
+	}
+	
+	//@Test
+	public void getDailyTop100Ids() {
+		List<String> ids = tr.getDailyTop100Ids();
+		System.out.println(ids);
+	}
+	
+	@Test
+	public void dd() {
+		tr.generateAvaTop50(tr.getDailyTop100Ids());
 	}
 	
 }

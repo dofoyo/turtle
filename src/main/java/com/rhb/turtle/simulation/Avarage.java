@@ -23,7 +23,7 @@ public class Avarage {
 		}
 		bars.add(bar);
 		this.total = this.total.add(bar.getAmount());
-		if(bars.size() > 300) {
+		if(bars.size() > top) {
 			AvaBar b = bars.removeFirst();
 			this.total = this.total.subtract(b.getAmount());
 		}

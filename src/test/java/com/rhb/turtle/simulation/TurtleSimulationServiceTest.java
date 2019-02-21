@@ -7,10 +7,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.rhb.turtle.simulation.TurtleSimulationService;
+import com.rhb.turtle.TurtleApplication;
+import com.rhb.turtle.simulation.service.TurtleSimulationService;
 import com.rhb.turtle.util.FileUtil;
 
 @RunWith(SpringJUnit4ClassRunner.class)

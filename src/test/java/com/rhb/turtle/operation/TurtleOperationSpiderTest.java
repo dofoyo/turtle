@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.rhb.turtle.operation.TurtleOperationSpider;
-import com.rhb.turtle.simulation.TurtleSimulationSpider;
+import com.rhb.turtle.simulation.spider.TurtleSimulationSpider;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest

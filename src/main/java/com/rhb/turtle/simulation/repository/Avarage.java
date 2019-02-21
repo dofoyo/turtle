@@ -1,10 +1,10 @@
-package com.rhb.turtle.simulation;
+package com.rhb.turtle.simulation.repository;
 
 import java.math.BigDecimal;
 import java.util.LinkedList;
 
 public class Avarage {
-	private Integer top = 300;
+	private Integer top = 233; //斐波那契数列中的一个数
 	private LinkedList<AvaBar> bars = new LinkedList<AvaBar>();
 	private BigDecimal total = new BigDecimal(0);
 	private String id = null;

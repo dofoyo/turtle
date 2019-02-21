@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +20,8 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.rhb.turtle.simulation.AvaBar;
-import com.rhb.turtle.simulation.Avarage;
+import com.rhb.turtle.simulation.repository.AvaBar;
+import com.rhb.turtle.simulation.repository.Avarage;
 import com.rhb.turtle.util.FileUtil;
 
 @Service("turtleOperationRepositoryImp")
@@ -102,11 +103,11 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	public void generateAvaTop50(List<String> ids) {
 		Integer top = 50;
 
-		Map<LocalDate,TreeSet<AvaBar>> avaTops = new HashMap<LocalDate,TreeSet<AvaBar>>();
+		Map<LocalDateTime,TreeSet<AvaBar>> avaTops = new HashMap<LocalDateTime,TreeSet<AvaBar>>();
 		Avarage avarage;
 		AvaBar avaBar = null;
 		TreeSet<AvaBar> avaBars;
-		LocalDate date;
+		LocalDateTime date;
 		
 		List<Map<String,String>>  kDatas;
 		int d = 0;
@@ -117,7 +118,7 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 			kDatas = getKDatas(id);
 			//System.out.println(id + "," + kDatas.size());
 			for(Map<String,String> kdata : kDatas) {
-				date = LocalDate.parse(kdata.get("date"),DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				date = LocalDateTime.parse(kdata.get("date")+" 00:00:00",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 				avaBar = new AvaBar(date,id,new BigDecimal(kdata.get("amount")));
 				avaBar.setAva(avarage.getAmountAvarage(avaBar));
 				if(avarage.isOk()) {
@@ -136,9 +137,9 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 		}
 
 		StringBuffer sb = new StringBuffer();
-		List<LocalDate> dates = new ArrayList<LocalDate>(avaTops.keySet());
+		List<LocalDateTime> dates = new ArrayList<LocalDateTime>(avaTops.keySet());
 		Collections.sort(dates);
-		LocalDate theDate = dates.get(dates.size()-1);
+		LocalDateTime theDate = dates.get(dates.size()-1);
 		avaBars = avaTops.get(theDate);
 		for(Iterator<AvaBar> i = avaBars.iterator() ; i.hasNext();) {
 			avaBar = i.next();

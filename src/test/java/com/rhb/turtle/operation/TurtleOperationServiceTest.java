@@ -19,12 +19,12 @@ public class TurtleOperationServiceTest {
 	@Qualifier("turtleOperationServiceImp")
 	TurtleOperationService ts;
 	
-	@Test
+	///@Test
 	public void operate() {
 		ts.operate();
 	}
 	
-	//@Test
+	@Test
 	public void doClosingWork() {
 		ts.doClosingWork(10);
 		System.out.println("done");

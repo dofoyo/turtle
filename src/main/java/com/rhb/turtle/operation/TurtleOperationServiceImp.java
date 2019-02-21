@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.rhb.turtle.domain.Kbar;
+import com.rhb.turtle.domain.Bar;
 import com.rhb.turtle.domain.Turtle;
 
 @Service("turtleOperationServiceImp")
@@ -102,7 +102,7 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 
 				latestKdata = turtleOperationSpider.getLatestMarketData(articleIDs.get(i));
 				
-				prices = turtle.getArticlePrices(articleIDs.get(i));
+				prices = turtle.getItemPrices(articleIDs.get(i));
 				line = new Line();
 				line.addPot("high", prices.get("high"));
 				line.addPot("low", prices.get("low"));

@@ -118,7 +118,7 @@ public class Order {
 		this.orderID = orderID;
 	}
 
-	public String getArticleID() {
+	public String getItemID() {
 		return articleID;
 	}
 

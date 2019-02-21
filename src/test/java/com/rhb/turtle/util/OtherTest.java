@@ -81,5 +81,11 @@ public class OtherTest {
 		}
 	}
 	
-	
+	@Test
+	public void testDateAndDateTime() {
+		LocalDate date = LocalDate.now();
+		LocalDateTime datetime = LocalDateTime.parse(date.toString() + " 00:00:00",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		System.out.println(datetime);
+		
+	}
 }

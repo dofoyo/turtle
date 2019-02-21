@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.rhb.turtle.operation.TurtleOperationServiceImp;
 
-public class Fund {
-	protected static final Logger logger = LoggerFactory.getLogger(Fund.class);
+public class Account {
+	protected static final Logger logger = LoggerFactory.getLogger(Account.class);
 
 	private BigDecimal cash;
 	private BigDecimal initCash;
@@ -30,34 +30,34 @@ public class Fund {
 	private LocalDate beginDate = null;
 	private LocalDate endDate = null;
 	
-	public Fund(BigDecimal cash) {
+	public Account(BigDecimal cash) {
 		this.initCash = cash;
 		this.cash = cash;
 	}
 
-	public List<String> getArticleIDsOfOnHand() {
+	public List<String> getItemIDsOfOnHand() {
 		List<String> ids = new ArrayList<String>();
 		for(Order order : onHands.values()) {
-			ids.add(order.getArticleID());
+			ids.add(order.getItemID());
 		}
 		return ids;
 	}
 
 	
-	public Integer getLots(String articleID) {
+	public Integer getLots(String itemID) {
 		Integer lot = 0;
 		for(Order order : onHands.values()) {
-			if(order.getArticleID().equals(articleID)) {
+			if(order.getItemID().equals(itemID)) {
 				lot = lot + order.getDirection();
 			}
 		}
 		return lot;
 	}
 	
-	public BigDecimal getReopenPrice(String articleID) {
+	public BigDecimal getReopenPrice(String itemID) {
 		BigDecimal reopenPrice = new BigDecimal(0);
 		for(Order order : onHands.values()) {
-			if(order.getArticleID().equals(articleID)) {
+			if(order.getItemID().equals(itemID)) {
 				if(reopenPrice.compareTo(order.getReopenPrice())==-1) {
 					reopenPrice = order.getReopenPrice();
 				}
@@ -84,11 +84,11 @@ public class Fund {
 		endDate = openOrder.getDate();
 	}
 	
-	public void close(String articleID, LocalDate date, BigDecimal price) {
+	public void close(String itemID, LocalDate date, BigDecimal price) {
 		Order openOrder;
 		for(Iterator<Map.Entry<String, Order>> it=onHands.entrySet().iterator(); it.hasNext();) {
 			openOrder = it.next().getValue();
-			if(openOrder.getArticleID().equals(articleID)) {
+			if(openOrder.getItemID().equals(itemID)) {
 				Order closeOrder = new Order(openOrder.getOrderID(),date,price,openOrder.getQuantity());
 				closeOrder.setNote("close");
 				
@@ -101,13 +101,13 @@ public class Fund {
 		}
 	}
 	
-	public void stop(Kbar bar) {
+	public void stop(Bar bar) {
 		Order openOrder;
 		for(Iterator<Map.Entry<String, Order>> it=onHands.entrySet().iterator(); it.hasNext();) {
 			openOrder = it.next().getValue();
-			if(openOrder.getArticleID().equals(bar.getArticleID())) {
+			if(openOrder.getItemID().equals(bar.getItemID())) {
 				if(bar.getLow().compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
-					String msg =  bar.getArticleID() + "," + bar.getDate() + ", 盘中最低价" + bar.getLow() + "跌破止损价" + openOrder.getStopPrice() + ", 止损！！！";
+					String msg =  bar.getItemID() + "," + bar.getDate() + ", 盘中最低价" + bar.getLow() + "跌破止损价" + openOrder.getStopPrice() + ", 止损！！！";
 					System.out.println(msg);
 					logger.warn(msg);
 					
@@ -225,7 +225,7 @@ public class Fund {
 		for(Map.Entry<String,Order> entry : open_his.entrySet()) {
 			openOrder = entry.getValue();
 			closeOrder = close_his.get(entry.getKey());
-			sb.append("'" + openOrder.getArticleID());
+			sb.append("'" + openOrder.getItemID());
 			sb.append(",");
 			sb.append("");
 			sb.append(",");

@@ -30,12 +30,6 @@
 			<scope>test</scope>
 		</dependency>
 		
-		<!-- Spring Cache -->
-		<dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-starter-cache</artifactId>
-		</dependency>
-		
 		<!-- httpclient -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>

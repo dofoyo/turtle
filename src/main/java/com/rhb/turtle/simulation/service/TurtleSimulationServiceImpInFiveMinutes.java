@@ -1,4 +1,4 @@
-package com.rhb.turtle.simulation;
+package com.rhb.turtle.simulation.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,8 +17,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.rhb.turtle.domain.Kbar;
+import com.rhb.turtle.domain.Bar;
 import com.rhb.turtle.domain.Turtle;
+import com.rhb.turtle.simulation.repository.TurtleSimulationRepository;
+import com.rhb.turtle.simulation.repository.entity.BarEntity;
+import com.rhb.turtle.simulation.repository.entity.EntityRepository;
+import com.rhb.turtle.simulation.repository.entity.ItemEntity;
+import com.rhb.turtle.simulation.spider.TurtleSimulationSpider;
 import com.rhb.turtle.util.Line;
 
 @Service("TurtleSimulationServiceImpInFiveMinutes")
@@ -30,6 +35,10 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 	@Qualifier("turtleSimulationRepositoryImp")
 	TurtleSimulationRepository turtleSimulationRepository ;
 
+	@Autowired
+	@Qualifier("entityRepositoryImp")
+	EntityRepository itemEntityRepository ;
+	
 	@Autowired
 	@Qualifier("turtleSimulationSpiderImp")
 	TurtleSimulationSpider turtleSimulationSpider ;
@@ -67,19 +76,27 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 	@Override
 	public Map<String, String> simulate() {
 		Turtle turtle = new Turtle(this.deficitFactor,this.openDuration,this.closeDuration,this.maxOfLot,this.initCash);
-		String id = "sz000651";
+		String itemID = "sz000651";
 		
 		//准备2018-01-31前至少90天K线数据
 		//获得上一个交易日收盘后下载的K线数据
-		List<Map<String,String>> kDatas;
+		Map<String,String> kData = null;
+		BarEntity<LocalDate> barEntity = null;
 		LocalDate preBeginDate = LocalDate.parse("2017-01-31");
 		LocalDate preEndDate = LocalDate.parse("2018-01-31");
-		kDatas = turtleSimulationRepository.getKDatas(id, preBeginDate, preEndDate);
-		turtle.addBar(kDatas);
+		System.out.println("prepare k datas...");
+		for(LocalDate date=preBeginDate; date.isBefore(preEndDate) ; date = date.plusDays(1)) {
+			System.out.println(date);
+			barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
+			if(barEntity!=null) {
+				kData = barEntity.getMap();
+				turtle.addBar(kData);
+			}
+		}
+		System.out.println("prepare k datas  done!");
 		
-		
+		BarEntity<LocalDateTime> fiveMinBarEntity = null;
 		Map<String, BigDecimal> prices;
-
 		Map<String,String> fiveKData;
 		Map<String,String> dailyKData;
 		LocalDateTime datetime = null;
@@ -90,18 +107,27 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 			System.out.println(++i + "/" + days + "," + date);
 			for(String time : times) {
 				datetime = LocalDateTime.parse(date.toString() + " " + time, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-				fiveKData = turtleSimulationRepository.getFiveKData(id, datetime);
-				if(fiveKData!=null) {
-					//System.out.println(fiveKData);
-					prices = turtle.getArticlePrices(id);
-					prices.put("now", new BigDecimal(fiveKData.get("close")));
-					System.out.println(Line.draw(prices));
-
-					turtle.doit(fiveKData, isStop);
+				fiveMinBarEntity = itemEntityRepository.get5MinKData(itemID).getBar(datetime);
+				if(fiveMinBarEntity!=null) {
+					fiveKData = fiveMinBarEntity.getMap();
+					if(fiveKData!=null) {
+						System.out.println(datetime);
+						prices = turtle.getItemPrices(itemID);
+						prices.put("now", new BigDecimal(fiveKData.get("close")));
+						System.out.println(Line.draw(prices));
+						
+						fiveKData.put("dateTime", date.toString()); //运行时，把分钟线当成当天最新价
+						turtle.doit(fiveKData, isStop);
+					}
 				}
 			}
-			dailyKData = turtleSimulationRepository.getDailyKData(id,date);
-			if(dailyKData!=null) turtle.addBar(dailyKData);
+			
+			barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
+			if(barEntity != null) {
+				dailyKData = barEntity.getMap();
+				if(dailyKData!=null) turtle.addBar(dailyKData);
+			}
+			
 		}
 		
 		return turtle.result();

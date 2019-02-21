@@ -1,4 +1,4 @@
-package com.rhb.turtle.simulation;
+package com.rhb.turtle.simulation.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,8 +13,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.rhb.turtle.domain.Kbar;
+import com.rhb.turtle.domain.Bar;
 import com.rhb.turtle.domain.Turtle;
+import com.rhb.turtle.simulation.repository.TurtleSimulationRepository;
+import com.rhb.turtle.simulation.repository.entity.BarEntity;
+import com.rhb.turtle.simulation.repository.entity.EntityRepository;
+import com.rhb.turtle.simulation.spider.TurtleSimulationSpider;
 
 @Service("turtleSimulationServiceImp")
 public class TurtleSimulationServiceImp implements TurtleSimulationService {
@@ -25,6 +29,11 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	@Qualifier("turtleSimulationRepositoryImp")
 	TurtleSimulationRepository turtleSimulationRepository ;
 
+	
+	@Autowired
+	@Qualifier("entityRepositoryImp")
+	EntityRepository itemEntityRepository ;
+	
 	@Autowired
 	@Qualifier("turtleSimulationSpiderImp")
 	TurtleSimulationSpider turtleSimulationSpider ;
@@ -42,62 +51,64 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	 */
 	private BigDecimal lot = new BigDecimal(100); 
 	
-	private Integer maxOfLot = 4;  //当maxOfLot为10时，相当于可以全仓买入一只股票
+	private Integer maxOfLot = 5;  
 	
-	private Integer top = 10;  //成交量排名前10名，不能低于5
+	private Integer top = 13;  //成交量排名前13名，不能低于5
 	
-	private Integer openDuration = 90;
-	private Integer closeDuration = 30;
+	private Integer openDuration = 89;
+	private Integer closeDuration = 34;
 	
-	private BigDecimal initCash = new BigDecimal(1000000);
+	private BigDecimal initCash = new BigDecimal(100000);
 	
-	private boolean isStop  = false;  //是否止损
+	private boolean isStop  = true;  //是否止损
 
 
 	@Override
 	public Map<String, String> simulate() {
 		Turtle turtle = new Turtle(this.deficitFactor,this.openDuration,this.closeDuration,this.maxOfLot,this.initCash);
 
-		List<Kbar> bars;
+		List<Bar> bars;
 		List<Map<String,String>> kDatas;
 		Map<String,String> kData;
-		List<String> ids;
+		BarEntity barEntity;
+		List<String> itemIDs;
 		Set<String> tmp;
 		long days = endDate.toEpochDay()-beginDate.toEpochDay();
 		int i = 0;
 		for(LocalDate date=beginDate; date.isBefore(endDate); date=date.plusDays(1)) {
 			System.out.println(++i + "/" + days + "," + date);
 
-			//直接从dailyTop100中选前top个进行模拟 - 不止损年复合收益率8%，止损12%
-			ids = turtleSimulationRepository.getDailyTopIds(top, date);
+			//直接从dailyTop100中选前top个进行模拟 - 不止损(年复合收益率4%,盈率42%), 止损(年复合收益率13%,盈率24%)
+			itemIDs = turtleSimulationRepository.getDailyTopIds(top, date);
 
-			//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损年复合收益率16%，止损15%
-			//ids = turtleSimulationRepository.getAvaTopIds(top, date);  
+			//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损(年复合收益率13%,盈率38%), 止损(年复合收益率19%,盈率21%)
+			//itemIDs = turtleSimulationRepository.getAvaTopIds(top, date);  
 			
-			//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损年复合收益率15%，止损14%
-			//ids = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 
+			//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损(年复合收益率8%,盈率41%), 止损(年复合收益率11%,盈率15%)
+			//itemIDs = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 
 			
 			//指定某一只牛股进行模拟，
 			//格力电器（000651, 不止损年复合收益率5%）
-			//贵州茅台（600519,不止损年复合收益率14%）
+			//贵州茅台（600519,不止损(年复合收益率14%,盈率65%), 止损(年复合收益率0%,盈率27%)）
 			//中国平安（601318,不止损年复合收益率8%）
-			//ids = new ArrayList<String>();
-			//ids.add("sh600519");
+			//itemIDs = new ArrayList<String>();
+			//itemIDs.add("sh600519");
 			
-			//从gulex生成的bluechips中选取全部进行模拟, 不止损年复合收益率1%, 止损0%
-			//ids = turtleSimulationRepository.getBluechipIds(date);
+			//从gulex生成的bluechips中选取全部进行模拟, 不止损(年复合收益率0%,盈率38%), 止损(年复合收益率0%,盈率20%)
+			//itemIDs = turtleSimulationRepository.getBluechipIds(date);
 			
-			if(ids!=null) {
+			if(itemIDs!=null) {
 				
 				//加入目前还持有的id，通过set去重
-				tmp = new HashSet<String>(ids);
+				tmp = new HashSet<String>(itemIDs);
 				for(String id: turtle.getArticleIDsOfOnHand()) {
-					if(!tmp.contains(id)) ids.add(id);
+					if(!tmp.contains(id)) itemIDs.add(id);
 				}
 				
-				for(String id : ids) {
-					kData = turtleSimulationRepository.getDailyKData(id,date);
-					if(kData!=null) {
+				for(String itemID : itemIDs) {
+					barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
+					if(barEntity!=null) {
+						kData = barEntity.getMap();
 						turtle.doit(kData,isStop);
 						turtle.addBar(kData);
 					}

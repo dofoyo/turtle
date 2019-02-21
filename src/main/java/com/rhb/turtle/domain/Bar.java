@@ -3,8 +3,8 @@ package com.rhb.turtle.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class Kbar {
-	private String articleID;
+public class Bar  {
+	private String itemID;
 	private LocalDate date;
 	private BigDecimal open;
 	private BigDecimal high;
@@ -12,8 +12,8 @@ public class Kbar {
 	private BigDecimal close;
 	private BigDecimal tr; // 波动幅度
 	
-	public Kbar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close) {
-		this.articleID = articleID;
+	public Bar(String itemID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close) {
+		this.itemID = itemID;
 		this.date = date;
 		this.open = open;
 		this.high = high;
@@ -21,8 +21,8 @@ public class Kbar {
 		this.close = close;
 	}
 	
-	public Kbar(String articleID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
-		this.articleID = articleID;
+	public Bar(String itemID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
+		this.itemID = itemID;
 		this.date = date;
 		this.open = open;
 		this.high = high;
@@ -70,17 +70,17 @@ public class Kbar {
 		this.tr = tr;
 	}
 
-	public String getArticleID() {
-		return articleID;
+	public String getItemID() {
+		return itemID;
 	}
 
-	public void setArticleID(String articleID) {
-		this.articleID = articleID;
+	public void setItemID(String itemID) {
+		this.itemID = itemID;
 	}
 
 	@Override
 	public String toString() {
-		return "Kbar [articleID=" + articleID + ", date=" + date + ", open=" + open + ", high=" + high + ", low=" + low
+		return "Kbar [itemID=" + itemID + ", date=" + date + ", open=" + open + ", high=" + high + ", low=" + low
 				+ ", close=" + close + ", tr=" + tr + "]";
 	}
 

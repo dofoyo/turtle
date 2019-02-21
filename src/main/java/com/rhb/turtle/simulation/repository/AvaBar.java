@@ -1,15 +1,16 @@
-package com.rhb.turtle.simulation;
+package com.rhb.turtle.simulation.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public class AvaBar implements Comparable<AvaBar>{
+public class AvaBar<T> implements Comparable<AvaBar>{
 	@Override
 	public String toString() {
-		return "BarEntity [date=" + date + ", id=" + id + ", amount=" + amount + ", ava=" + ava + "]";
+		return "BarEntity [datetime=" + datetime + ", id=" + id + ", amount=" + amount + ", ava=" + ava + "]";
 	}
 
-	private LocalDate date;
+	private T datetime;
 	private String id;
 	private BigDecimal amount = new BigDecimal(0);
 	private BigDecimal ava = new BigDecimal(0);
@@ -18,18 +19,18 @@ public class AvaBar implements Comparable<AvaBar>{
 		this.id = id;
 	}
 	
-	public AvaBar(LocalDate date,String id, BigDecimal amount) {
-		this.date = date;
+	public AvaBar(T datetime, String id, BigDecimal amount) {
+		this.datetime = datetime;
 		this.id = id;
 		this.amount = amount;
 	}
 
-	public LocalDate getDate() {
-		return date;
+	public T getDatetime() {
+		return datetime;
 	}
 
-	public void setDate(LocalDate date) {
-		this.date = date;
+	public void setDate(T date) {
+		this.datetime = date;
 	}
 
 	public String getId() {

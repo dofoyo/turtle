@@ -7,8 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.rhb.turtle.domain.Bar;
+import com.rhb.turtle.domain.Order;
 import com.rhb.turtle.domain.Turtle;
+import com.rhb.turtle.util.Line;
 
 @Service("turtleOperationServiceImp")
 public class TurtleOperationServiceImp implements TurtleOperationService {
@@ -49,8 +53,8 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 	
 	private Integer top = 10;  //成交量排名前40名，不能低于5
 	
-	private Integer openDuration = 90;
-	private Integer closeDuration = 30;
+	private Integer openDuration = 89;
+	private Integer closeDuration = 34;
 	
 	private BigDecimal initCash = new BigDecimal(100000);
 	
@@ -67,23 +71,32 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 			System.out.println("today is the trade day! Good Luck!");
 		}else {
 			System.out.println("today is NOT the trade day! take it easy!");
-			return;
+			//return;
 		}
 		
 		Turtle turtle = new Turtle(this.deficitFactor,this.openDuration,this.closeDuration,this.maxOfLot,this.initCash);
 
 		//获得上一个交易日收盘后生成的article.txt
-		List<String> articleIDs = turtleOperationRepository.getArticleIDs();
+		Map<String,String> articles = turtleOperationRepository.getArticles();
 		
 		//获得上一个交易日收盘后下载的K线数据
 		List<Map<String,String>> kDatas;
-		for(String id : articleIDs) {
-			kDatas = turtleOperationRepository.getKDatas(id);
+		for(Map.Entry<String, String> article : articles.entrySet()) {
+			//System.out.println(id);
+			kDatas = turtleOperationRepository.getKDatas(article.getKey());
+			//System.out.println(kDatas);
 			turtle.addBar(kDatas);
 			/*List<Kbar> kbars = turtle.getKbars(id);
 			for(Kbar bar : kbars) {
 				System.out.println(bar);
 			}*/
+		}
+		
+		//导入onhands.json
+		//String orderID,String itemID, LocalDate date,Integer direction, BigDecimal price, BigDecimal stopPrice, BigDecimal reopenPrice
+		List<OrderEntity> orders = turtleOperationRepository.getOnhands();
+		for(OrderEntity o : orders) {
+			turtle.putOrder(new Order(o.getOrderID(),o.getItemID(),LocalDate.parse(o.getDate()),Integer.parseInt(o.getDirection()),new BigDecimal(o.getPrice()),new BigDecimal(o.getStopPrice()),new BigDecimal(o.getReopenPrice())));
 		}
 		
 		LocalDateTime start = LocalDateTime.parse(today.toString()+" 09:30:00",df);
@@ -92,45 +105,43 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		
 		Map<String, String> latestKdata;
 		Map<String, BigDecimal> prices;
-		Line line;
-		for(int i=0; ; ) {
-			now=LocalDateTime.now(); 
+		while(true) {
+			for(Map.Entry<String, String> article : articles.entrySet()) {
+				now=LocalDateTime.now(); 
 
-			if(now.isAfter(start) && now.isBefore(end)){
-				System.out.print(now.toString() + "      ");
-				System.out.print(articleIDs.get(i) + "     ");
+				//if(now.isAfter(start) && now.isBefore(end)){
+					System.out.print(now.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " ");
+					System.out.print(article.getKey() + article.getValue() + " ");
 
-				latestKdata = turtleOperationSpider.getLatestMarketData(articleIDs.get(i));
-				
-				prices = turtle.getItemPrices(articleIDs.get(i));
-				line = new Line();
-				line.addPot("high", prices.get("high"));
-				line.addPot("low", prices.get("low"));
-				line.addPot("now", new BigDecimal(latestKdata.get("close")));
-				
-				System.out.println(line.draw());
-				
-				turtle.doit(latestKdata, isStop);
-				
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}			
-			}else {
-				System.out.println("\ntoday' trade period is over! bye bye! have a good time!");
-				return;
+					latestKdata = turtleOperationSpider.getLatestMarketData(article.getKey());
+					
+					prices = turtle.getItemPrices(article.getKey());
+					prices.put("now", new BigDecimal(latestKdata.get("close")));
+
+					System.out.println(Line.draw(prices));
+					System.out.println("\n\n");
+					
+					turtle.doit(latestKdata, isStop);
+					
+				//}else {
+					//System.out.println("\ntoday' trade period is over! bye bye! have a good time!");
+					//return;
+				//}
 			}
 			
-			i++;
-			if(i==articleIDs.size()-1) i=0;
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}			
+
 		}
 	}
 	
 
 
 	@Override
-	public void doClosingWork(Integer top) {
+	public void doClosingWork() {
 		LocalDate today = LocalDate.now();
 		LocalDate theDay = turtleOperationSpider.getLatestMarketDate();
 		if(!today.equals(theDay)) {
@@ -145,24 +156,29 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		}
 		
 		//下载dailyTop100
-		List<String> ids = turtleOperationSpider.downLatestDailyTop100();
+		System.out.println("downLatestDailyTop100..............");
+		List<String> dailyTop100IDs = turtleOperationSpider.downLatestDailyTop100();
+		Set<String>  ids = new HashSet<String>(dailyTop100IDs);
+
 		
-		//下载最新K线数据
-		for(String id : ids) {
-			//turtleOperationSpider.downKdatas(id);
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		//加入articles.json
+		Map<String,String> articles = turtleOperationRepository.getArticles();
+		for(Map.Entry<String, String> article : articles.entrySet()) {
+			ids.add(article.getKey());
 		}
 		
+		//下载dailyTop100和article.txt的最新K线数据
+		System.out.println("downKdatas..............");
+		int i=1;
+		int total = ids.size();
+		for(String id : ids) {
+			System.out.println(i++ + "/" + total);
+			turtleOperationSpider.downKdatas(id);
+		}
 		
 		//生成avatop50
-		turtleOperationRepository.generateAvaTop50(ids);
-		
-		
+		System.out.println("generateAvaTop50..........");
+		turtleOperationRepository.generateAvaTop50(dailyTop100IDs);
 		
 	}
 	
@@ -171,71 +187,4 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
-	//内部类-------------
-	class Line {
-		List<Pot> pots = new ArrayList<Pot>();
-		public void addPot(String name, BigDecimal price) {
-			pots.add(new Pot(name,price));
-		}
-		
-		private String getDots(Pot low, Pot high) {
-			StringBuffer sb = new StringBuffer();
-			Integer ratio = high.getPrice().subtract(low.getPrice()).divide(low.getPrice(),BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
-			for(int i=0; i<ratio; i++) {
-				sb.append("-");
-			}
-			sb.append(high);
-			return sb.toString();
-		}
-		
-		public String draw() {
-			Collections.sort(pots,new Comparator<Pot>() {
-				@Override
-				public int compare(Pot o1, Pot o2) {
-					return o1.getPrice().compareTo(o2.getPrice());
-				}
-			});
-			
-			StringBuffer sb = new StringBuffer();
-			for(int i=0; i<pots.size(); i++) {
-				if(i==0) {
-					sb.append(pots.get(i));
-				}else {
-					sb.append(getDots(pots.get(i-1),pots.get(i)));
-				}
-			}
-			
-			return sb.toString();
-		}
-		
-		class Pot{
-			private String name;
-			private BigDecimal price;
-			public Pot(String name, BigDecimal price) {
-				this.name = name;
-				this.price = price;
-			}
-			
-			public String getName() {
-				return name;
-			}
-			public void setName(String name) {
-				this.name = name;
-			}
-			public BigDecimal getPrice() {
-				return price;
-			}
-			public void setPrice(BigDecimal price) {
-				this.price = price;
-			}
-			
-			public String toString() {
-				return name + "(" + price + ")";
-			}
-			
-		}
-	};
-
 }

@@ -22,31 +22,14 @@ public class TurtleOperationRepositoryTests {
 	@Qualifier("turtleOperationRepositoryImp")
 	TurtleOperationRepository tr ;
 
-	
 	//@Test
-	public void getArticleIDs() {
-		List<String> ids = tr.getArticleIDs();
+	public void getOnhands() {
+		List<OrderEntity> orders = tr.getOnhands();
 		int i=1;
-		for(String id : ids) {
-			System.out.println(i++ + ". " + id);			
+		for(OrderEntity order : orders) {
+			System.out.println(order);			
 		}
 	}
-	
-	//@Test
-	public void getDailyTopCodes() {
-		List<String> ids = tr.getArticleIDs();
-		int i=1;
-		for(String id : ids) {
-			System.out.println(i++ + ". " + id);
-			
-			List<Map<String,String>> kdatas = tr.getKDatas(id);
-			
-			for(Map<String,String> kdata : kdatas) {
-				System.out.println(kdata);
-			}
-		}
-	}
-	
 	
 	//@Test
 	public void getKDatas() {
@@ -64,9 +47,15 @@ public class TurtleOperationRepositoryTests {
 		System.out.println(ids);
 	}
 	
-	@Test
-	public void dd() {
+	//@Test
+	public void generateAvaTop50() {
 		tr.generateAvaTop50(tr.getDailyTop100Ids());
+	}
+	
+	@Test
+	public void getArticles() {
+		Map<String,String> a = tr.getArticles();
+		System.out.println(a);
 	}
 	
 }

@@ -38,5 +38,6 @@ public interface TurtleSimulationRepository {
 	 */
 	public void generateDailyTop100();
 	
+	public Set<String> getIdsFromDir();
 	
 }

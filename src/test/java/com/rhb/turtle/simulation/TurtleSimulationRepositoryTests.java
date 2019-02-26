@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.rhb.turtle.simulation.repository.TurtleSimulationCagrRepository;
 import com.rhb.turtle.simulation.repository.TurtleSimulationRepository;
 import com.rhb.turtle.simulation.repository.entity.BarEntity;
 
@@ -28,6 +29,22 @@ public class TurtleSimulationRepositoryTests {
 	@Qualifier("turtleSimulationRepositoryImp")
 	TurtleSimulationRepository turtleSimulationRepository ;
 
+	@Autowired
+	@Qualifier("turtleSimulationCagrRepositoryImp")
+	TurtleSimulationCagrRepository cagrRepository ;
+
+	@Test
+	public void generateCAGRTop50() {
+		cagrRepository.generateCAGRTop50();
+		System.out.println("generateDailyCAGR done!");
+	}
+	
+	//@Test
+	public void testGenerateDailyCAGR() {
+		cagrRepository.generateDailyCAGR();
+		System.out.println("generateDailyCAGR done!");
+	}
+	
 	//@Test
 	public void getKDatas() {
 		String code = "000001";
@@ -45,7 +62,7 @@ public class TurtleSimulationRepositoryTests {
 		turtleSimulationRepository.generateDailyTop100();
 	}
 	
-	@Test
+	//@Test
 	public void generateAvaTop50() {
 		turtleSimulationRepository.generateAvaTop50();
 	}

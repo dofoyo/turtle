@@ -2,8 +2,13 @@ kDataPath: c:/workspace/turtle-data/operation/kdatas
 reportPath: C:/workspace/turtle-data/operation/reports
 dailyTop100File: C:/workspace/turtle-data/operation/dailyTop100.txt
 avaTop50File: C:/workspace/turtle-data/operation/avaTop50.txt
-articleFile: C:/workspace/turtle-data/operation/article.txt
-bluechipsFile: C:/workspace/turtle-data/simulation/bluechipids.txt
+articlesFile: C:/workspace/turtle-data/operation/articles.txt
+bluechipsFile: C:/workspace/turtle-data/operation/bluechipids.txt
+cagrsPath: C:/workspace/turtle-data/operation/cagrs
+cagrTop50File: C:/workspace/turtle-data/operation/cagrTop50.txt
+onhandsFile: C:/workspace/turtle-data/operation/onhands.json
+cagrTopFile: C:/workspace/turtle-data/simulation/cagrTop.txt
+
 
 
 

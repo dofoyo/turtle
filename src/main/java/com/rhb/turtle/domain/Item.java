@@ -109,17 +109,17 @@ public class Item {
 			if(bar.getHigh().compareTo(highest)>0) {
 				//System.out.println(articleID + "," + openDuration +"天高点" + highest);
 				//System.out.println(this.bars);
-				String msg = itemID + "," + bar.getDate() + ", 盘中最高价格" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + ",开多仓！！";
-				System.out.println(msg);
-				logger.warn(msg);
+				String msg = itemID + "，" + bar.getDate() + "，盘中最高价格" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + "，开多仓！！";
+				//System.out.println(msg);
+				logger.info(msg);
 				return 1;
 			}
 			
 			//突破低点，下跌势头，卖空
 			if(bar.getLow().compareTo(lowest)<0) {
-				String msg = itemID + "盘中最低价格" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + ",开空仓！！";
-				System.out.println(msg);
-				logger.warn(msg);
+				String msg = itemID + "，" + bar.getDate() + "盘中最低价格" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + "，开空仓！！";
+				//System.out.println(msg);
+				logger.info(msg);
 				return -1;
 			}
 		}
@@ -139,6 +139,13 @@ public class Item {
 			sum_tr = sum_tr.add(bar.getTr());
 		}
 		return sum_tr.divide(new BigDecimal(this.bars.size()),BigDecimal.ROUND_HALF_UP); 
+	}
+	
+	public LocalDate[] getBeginAndEndDateOfOpenDuration() {
+		LocalDate[] dates = new LocalDate[2];
+		dates[0] = this.bars.get(0).getDate();
+		dates[1] = this.bars.get(this.bars.size()-1).getDate();
+ 		return dates;
 	}
 	
 	/*
@@ -164,28 +171,52 @@ public class Item {
 		return new BigDecimal[]{highest,lowest}; 
 	}
 	
+	
+	/*
+	 * 计算一段时间内的最高点比最低点高出的百分百
+	 */
+	public Integer getRateOfHighestAndLowest(Integer duration){
+		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
+		Integer toIndex = this.bars.size();
+		List<Bar> subBars = this.bars.subList(fromIndex, toIndex);
+		
+		BigDecimal highest = new BigDecimal(0);
+		BigDecimal lowest = new BigDecimal(100000000);
+		for(Bar bar : subBars) {
+			if(bar.getHigh().compareTo(highest)>0) {
+				highest = bar.getHigh();
+			}
+			
+			if(bar.getLow().compareTo(lowest)<0) {
+				lowest = bar.getLow();
+			}
+		}
+		
+		Integer rate = highest.subtract(lowest).divide(lowest,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
+		
+		return rate; 
+	}
+	
 	/*
 	 * 退出判断
 	 */
-	public boolean closePing(Bar bar, Integer d, Integer openDuration) {
-		if(this.bars.size()>=openDuration) {
-			BigDecimal[] keyValues = getHighestAndLowest(openDuration);
+	public boolean closePing(Bar bar, Integer d, Integer closeDuration) {
+		if(this.bars.size()>=closeDuration) {
+			BigDecimal[] keyValues = getHighestAndLowest(closeDuration);
 			BigDecimal highest = keyValues[0];
 			BigDecimal lowest = keyValues[1];
 
 			//持有空头头寸，突破高点，上涨势头，平仓
 			if(d<0 && bar.getHigh().compareTo(highest)>0) {
-				String msg = "持有" + itemID + "空头，但盘中最高价" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + ",立即平仓！！";
-				System.out.println(msg);
-				logger.warn(msg);
+				String msg = "持有" + itemID + "空头，但盘中最高价" + bar.getHigh() + "突破" + closeDuration + "天高点" + highest + "，立即平仓！！";
+				logger.info(msg);
 				return true;
 			}
 			
 			//持有多头头寸，突破低点，下跌趋势，平仓
 			if(d>0 && bar.getLow().compareTo(lowest)<0) {
-				String msg = "持有" + itemID + "多头，但盘中最低价" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + ",立即平仓！！";
-				System.out.println(msg);
-				logger.warn(msg);
+				String msg = "持有" + itemID + "多头，但盘中最低价" + bar.getLow() + "突破" + closeDuration + "天低点" + lowest + "，立即平仓！！";
+				logger.info(msg);
 				return true;
 			}			
 		}

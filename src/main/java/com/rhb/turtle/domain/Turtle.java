@@ -40,7 +40,7 @@ public class Turtle {
 	private BigDecimal initCash;
 	
 	private Map<String, Item> items;
-	private Account fund;
+	private Account account;
 
 	public Turtle(BigDecimal deficitFactor, 
 				Integer openDuration, 
@@ -53,26 +53,42 @@ public class Turtle {
 		this.closeDuration = closeDuration;
 		this.maxOfLot = maxOfLot;
 		this.initCash = initCash;
-		fund = new Account(initCash);
+		account = new Account(initCash);
 		items = new HashMap<String,Item>();
 	}
 	
-	public List<Bar> getKbars(String articleID){
-		Item article = items.get(articleID);
-		return article.getBars();
+	public void putOrder(Order order) {
+		account.putOrder(order);
 	}
 	
-	public Map<String,BigDecimal> getItemPrices(String articleID){
-		Item article = items.get(articleID);
-		BigDecimal[] highAndLow = article.getHighestAndLowest(openDuration);
+	public List<Bar> getKbars(String itemID){
+		Item item = items.get(itemID);
+		return item.getBars();
+	}
+	
+	public Map<String,BigDecimal> getItemPrices(String itemID){
+		Item item = items.get(itemID);
+		//System.out.println(item);
+		BigDecimal[] highAndLow = item.getHighestAndLowest(openDuration);
 		Map<String,BigDecimal> line = new HashMap<String,BigDecimal>();
 		line.put("high", highAndLow[0]);
 		line.put("low", highAndLow[1]);
+		
+		List<Order> orders = account.getOrders(itemID);
+		for(Order order : orders) {
+			line.put("buy", order.getPrice());
+			line.put("stop", order.getStopPrice());
+		}
+		if(orders.size()>0) {
+			highAndLow = item.getHighestAndLowest(closeDuration);
+			line.put("close", highAndLow[1]);
+		}
+		
 		return line;
 	}
 	
 	public List<String> getArticleIDsOfOnHand() {
-		return fund.getItemIDsOfOnHand();
+		return account.getItemIDsOfOnHand();
 	}
 	
 	public void doit(Map<String,String> kData, boolean isStop) {
@@ -83,6 +99,8 @@ public class Turtle {
 			item = new Item(bar.getItemID());
 			items.put(bar.getItemID(), item);
 		}
+		
+		account.updatePrice(item.getItemID(), bar.getDate(), bar.getClose());
 		
 		//止损
 		if(isStop) {
@@ -98,12 +116,13 @@ public class Turtle {
 	
 	public void addBar(Map<String,String> kData) {
 		Bar bar = getBar(kData);
-		Item article = items.get(bar.getItemID());
-		if(article == null) {
-			article = new Item(bar.getItemID());
-			items.put(bar.getItemID(), article);
+		Item item = items.get(bar.getItemID());
+		if(item == null) {
+			item = new Item(bar.getItemID());
+			items.put(bar.getItemID(), item);
+			//System.out.println("new Item, id is " + bar.getItemID());
 		}	
-		article.addBar(article.getItemID(),bar.getDate(), bar.getOpen(), bar.getHigh(), bar.getLow(), bar.getClose(), openDuration);
+		item.addBar(item.getItemID(),bar.getDate(), bar.getOpen(), bar.getHigh(), bar.getLow(), bar.getClose(), openDuration);
 	}
 	
 	public void addBar(List<Map<String,String>> kDatas) {
@@ -112,8 +131,12 @@ public class Turtle {
 		}
 	}
 	
+	/*
+	 * kData: dateTime, itemID, high, amount, low, close, open
+	 */
 	private Bar getBar(Map<String,String> kData) {
 		//System.out.println(kData);
+		//System.out.println(kData.get("dateTime"));
 		String itemID = kData.get("itemID");
 		LocalDate date = LocalDate.parse(kData.get("dateTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		BigDecimal open = new BigDecimal(kData.get("open"));
@@ -126,17 +149,19 @@ public class Turtle {
 	
 	//止损
 	private void doStop(Bar bar){
-		fund.stop(bar);
+		account.stop(bar);
 	}
 	
 	//平仓
 	private void doClose(Bar bar, Integer closeDuration) {
 		Item item = items.get(bar.getItemID());
-		Integer lots = fund.getLots(item.getItemID());
+		Integer lots = account.getLots(item.getItemID());
 		if(lots != 0) { //有持仓
 			boolean flag = item.closePing(bar, lots, closeDuration);
 			if(flag) {  //触发平仓
-				fund.close(item.getItemID(), bar.getDate(), bar.getClose());
+				LocalDate[] dates = item.getBeginAndEndDateOfOpenDuration();
+				Integer rate = item.getRateOfHighestAndLowest(closeDuration);
+				account.close(item.getItemID(), bar.getDate(), bar.getClose(), dates,rate);
 			}
 		}
 	}
@@ -147,23 +172,33 @@ public class Turtle {
 		Order openOrder = null;
 		Integer flag = item.openPing(bar, openDuration);
 		if(flag != null) {
-			Integer lots = fund.getLots(item.getItemID());
+			Integer lots = account.getLots(item.getItemID());
 			//System.out.println("lots = " + lots);
 			BigDecimal atr = item.getATR(openDuration);
+			LocalDate[] dates = item.getBeginAndEndDateOfOpenDuration();
+			Integer rate = item.getRateOfHighestAndLowest(openDuration);
 			if(flag==1 && lots==0) { //初次开多仓
 				BigDecimal stopPrice = bar.getClose().subtract(atr);
 				BigDecimal reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
 				openOrder = new Order(UUID.randomUUID().toString(),	item.getItemID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
-				openOrder.setNote("open");
+				openOrder.setNote("open，stop=" + stopPrice + "，reOpen="+reopenPrice + "，atr=" + atr + "，bDate" + dates[0] + "，eDate=" + dates[1]);
+				openOrder.setOpenRateOfHL(rate);
 			}
 			
 			if(flag==1 && lots>0 && lots<maxOfLot) {  //加开多仓
-				BigDecimal reopenPrice = fund.getReopenPrice(item.getItemID());
-				if(bar.getHigh().compareTo(reopenPrice)==1) {
-					BigDecimal stopPrice = bar.getClose().subtract(atr);
+				BigDecimal reopenPrice = account.getReopenPrice(item.getItemID());
+/*				if(bar.getItemID().equals("sh600570")) {
+					System.out.print(bar.getDate() + ",high=" + bar.getHigh() + ",reopenPrice=" + reopenPrice);
+				}
+*/				if(bar.getHigh().compareTo(reopenPrice)==1) {
+/*					if(bar.getItemID().equals("sh600570")) {
+						System.out.println(",reOpen");
+					}
+*/					BigDecimal stopPrice = bar.getClose().subtract(atr);
 					reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
 					openOrder = new Order(UUID.randomUUID().toString(),	item.getItemID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
-					openOrder.setNote("reOpen");
+					openOrder.setNote("reOpen，stop=" + stopPrice + "，reOpen="+reopenPrice + "，atr=" + atr + "，bDate" + dates[0] + "，eDate=" + dates[1]);
+					openOrder.setOpenRateOfHL(rate);
 				}
 			}
 			
@@ -184,22 +219,22 @@ public class Turtle {
 			}
 			*/
 			if(openOrder!=null) {
-				fund.open(openOrder, deficitFactor, atr, getLot(item.getItemID()));
+				account.open(openOrder, deficitFactor, atr, getLot(item.getItemID()));
 			}
 		}
 	}
 	
 	public Map<String,String> result() {
-		if(fund == null) return null;
+		if(account == null) return null;
 		
 		Map<String,String> result = new HashMap<String,String>();
-		result.put("CSV", fund.getCSV());
+		result.put("CSV", account.getCSV());
 		result.put("initCash", this.initCash.toString());
-		result.put("cash", fund.getCash().toString());
-		result.put("value", fund.getValue().toString());
-		result.put("total", fund.getTotal().toString());
-		result.put("winRatio", fund.getWinRatio().toString()); //赢率
-		result.put("cagr", fund.getCAGR().toString());  //复合增长率的英文缩写为：CAGR（Compound Annual Growth Rate）
+		result.put("cash", account.getCash().toString());
+		result.put("value", account.getValue().toString());
+		result.put("total", account.getTotal().toString());
+		result.put("winRatio", account.getWinRatio().toString()); //赢率
+		result.put("cagr", account.getCAGR().toString());  //复合增长率的英文缩写为：CAGR（Compound Annual Growth Rate）
 		return result;
 	}
 	

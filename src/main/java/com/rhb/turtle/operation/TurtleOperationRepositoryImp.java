@@ -20,17 +20,19 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.rhb.turtle.domain.Order;
 import com.rhb.turtle.simulation.repository.AvaBar;
 import com.rhb.turtle.simulation.repository.Avarage;
 import com.rhb.turtle.util.FileUtil;
+import com.rhb.turtle.util.JsonUtil;
 
 @Service("turtleOperationRepositoryImp")
 public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	@Value("${kDataPath}")
 	private String kDataPath;
 	
-	@Value("${articleFile}")
-	private String articleFile;
+	@Value("${articlesFile}")
+	private String articlesFile;
 
 	@Value("${avaTop50File}")
 	private String avaTop50File;
@@ -38,14 +40,27 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	@Value("${dailyTop100File}")
 	private String dailyTop100File;
 	
+	@Value("${onhandsFile}")
+	private String onhandsFile;
+	
 	@Override
-	public List<String> getArticleIDs(){
-		List<String> ids = new ArrayList<String>();
-		String[] strs = FileUtil.readTextFile(articleFile).split(",");
-		for(String str : strs) {
-			ids.add(str.replaceAll("\r|\n", ""));
+	public List<OrderEntity> getOnhands() {
+		String str = FileUtil.readTextFile(onhandsFile);
+		return JsonUtil.jsonToList(str, OrderEntity.class);
+	}
+	
+	@Override
+	public Map<String,String> getArticles(){
+		Map<String,String> articles = new HashMap<String,String> ();
+		String source = FileUtil.readTextFile(articlesFile);
+		//System.out.println(source);
+		String[] lines = source.split("\n");
+		for(String str : lines) {
+			//System.out.println(str);
+			String[] ss = str.split(",");
+			articles.put(ss[0], ss[1]);
 		}
-		return ids;
+		return articles;
 	}
 	
 	@Override
@@ -88,8 +103,8 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 		BigDecimal factor = new BigDecimal(columns[7]);
 		String amount = columns[6];
 		
-		kData.put("id", id);
-		kData.put("date", columns[0]);
+		kData.put("itemID", id);
+		kData.put("dateTime", columns[0]);
 		kData.put("open", open.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
 		kData.put("high", high.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
 		kData.put("low", low.divide(factor,BigDecimal.ROUND_HALF_UP).setScale(2, BigDecimal.ROUND_HALF_UP).toString());
@@ -118,7 +133,7 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 			kDatas = getKDatas(id);
 			//System.out.println(id + "," + kDatas.size());
 			for(Map<String,String> kdata : kDatas) {
-				date = LocalDateTime.parse(kdata.get("date")+" 00:00:00",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+				date = LocalDateTime.parse(kdata.get("dateTime")+" 00:00:00",DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 				avaBar = new AvaBar(date,id,new BigDecimal(kdata.get("amount")));
 				avaBar.setAva(avarage.getAmountAvarage(avaBar));
 				if(avarage.isOk()) {
@@ -161,5 +176,10 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 		return ids;
 	}
 
-	
+	@Override
+	public boolean getIsKDatasExist(String id, String year, String jidu) {
+		String file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
+		return FileUtil.isExists(file);
+	}
+
 }

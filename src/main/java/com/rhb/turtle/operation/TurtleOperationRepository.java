@@ -3,9 +3,12 @@ package com.rhb.turtle.operation;
 import java.util.List;
 import java.util.Map;
 
+import com.rhb.turtle.domain.Order;
+
 public interface TurtleOperationRepository {
 	public List<Map<String,String>> getKDatas(String id);
-	public List<String> getArticleIDs();
+	public boolean getIsKDatasExist(String id, String year, String jidu);
+	public Map<String,String> getArticles();
 	public List<String> getDailyTop100Ids();
 	
 	/*
@@ -14,4 +17,6 @@ public interface TurtleOperationRepository {
 	 * 不需要循环把每天的算出来
 	 */
 	public void generateAvaTop50(List<String> ids);
+	
+	public List<OrderEntity> getOnhands();
 }

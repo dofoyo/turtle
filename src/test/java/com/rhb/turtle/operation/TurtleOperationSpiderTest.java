@@ -34,7 +34,7 @@ public class TurtleOperationSpiderTest {
 		System.out.println("done");
 	}
 	
-	@Test
+	//@Test
 	public void downKdatas() {
 		String year="2017";
 		String jidu;
@@ -46,6 +46,38 @@ public class TurtleOperationSpiderTest {
 			}
 		}
 		System.out.println("done");
+	}
+	
+	
+	@Test
+	public void downKdatasFromIDs() {
+		String[] ids = {"sh600919","sh601328","sz002101","sh601998"};
+		String[] yearAndJidu = getYearAndJidu(5);
+		for(String id : ids) {
+			for(String str : yearAndJidu) {
+				turtleOperationSpider.downKdatas(id, str.substring(0,4), str.substring(5,6));
+				try {Thread.sleep(5000);} catch (InterruptedException e) {e.printStackTrace();}
+			}
+		}
+		System.out.println("done");
+	}
+	
+	private String[] getYearAndJidu(Integer num) {
+		LocalDate now = LocalDate.now();
+		int year = now.getYear();
+		int jidu = now.getMonthValue()/3 + 1;
+		String[] ss = new String[num];
+		ss[0] = String.valueOf(year) + "." + String.valueOf(jidu);
+		for(int i=1; i<num; i++) {
+			if(jidu-1<=0) {
+				year--;
+				jidu=4;
+			}else {
+				jidu--;
+			}
+			ss[i]=String.valueOf(year) + "." + String.valueOf(jidu);
+		}
+		return ss;
 	}
 	
 }

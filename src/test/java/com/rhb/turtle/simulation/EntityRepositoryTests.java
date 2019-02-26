@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.rhb.turtle.simulation.repository.entity.BarEntity;
+import com.rhb.turtle.simulation.repository.entity.CagrEntity;
 import com.rhb.turtle.simulation.repository.entity.EntityRepository;
 
 
@@ -53,7 +54,7 @@ public class EntityRepositoryTests {
 		}
 	}
 	
-	@Test
+	//@Test
 	public void testGetDailyTopIds() {
 		LocalDate beginDate = LocalDate.parse("2019-01-27");
 		LocalDate endDate = LocalDate.parse("2019-02-13");
@@ -71,9 +72,23 @@ public class EntityRepositoryTests {
 				System.out.println("");
 			}
 		}
-		
 	}
 	
+	@Test
+	public void testGetDailyCagr() {
+		String[] ids = {"sh600030","sz000063"};
+		
+		LocalDate beginDate = LocalDate.parse("2017-01-01");
+		LocalDate endDate = LocalDate.parse("2017-12-31");		
+		CagrEntity entity;
+		for(LocalDate date=beginDate; date.isBefore(endDate); date=date.plusDays(1)) {
+			for(String id : ids) {
+				entity = itemEntityRepository.getDailyCagr(id).getCagr(date);
+				
+				System.out.println(entity);
+			}
+		}
+	}
 	
 	
 }

@@ -144,7 +144,8 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		}
 	}
 
-	private Set<String> getIdsFromDir() {
+	@Override
+	public Set<String> getIdsFromDir() {
 		Set<String> ids = new HashSet<String>();
 		List<File> files = FileUtil.getFiles(this.kDataPath, null, true);
 		for(File file : files) {

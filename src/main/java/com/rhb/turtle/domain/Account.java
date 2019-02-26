@@ -3,6 +3,8 @@ package com.rhb.turtle.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,6 +28,7 @@ public class Account {
 	
 	private Map<String,Order> open_his = new HashMap<String,Order>();
 	private Map<String,Order> close_his = new HashMap<String,Order>();
+	private Map<String,Price> latestPrices = new HashMap<String,Price>(); //主要用于计算持仓利润
 	
 	private LocalDate beginDate = null;
 	private LocalDate endDate = null;
@@ -33,6 +36,14 @@ public class Account {
 	public Account(BigDecimal cash) {
 		this.initCash = cash;
 		this.cash = cash;
+	}
+	
+	public void updatePrice(String itemID,LocalDate date, BigDecimal price) {
+		latestPrices.put(itemID, new Price(date,price));
+	}
+	
+	public void putOrder(Order order) {
+		onHands.put(order.getOrderID(), order);
 	}
 
 	public List<String> getItemIDsOfOnHand() {
@@ -54,12 +65,55 @@ public class Account {
 		return lot;
 	}
 	
-	public BigDecimal getReopenPrice(String itemID) {
-		BigDecimal reopenPrice = new BigDecimal(0);
+	public List<Order> getOrders(String itemID){
+		List<Order> orders = new ArrayList<Order>();
 		for(Order order : onHands.values()) {
 			if(order.getItemID().equals(itemID)) {
-				if(reopenPrice.compareTo(order.getReopenPrice())==-1) {
+				orders.add(order);
+			}
+		}		
+		
+		Collections.sort(orders,new Comparator<Order>() {
+			@Override
+			public int compare(Order o1, Order o2) {
+				return o1.getDate().compareTo(o2.getDate());
+			}});
+		return orders;
+	}
+	
+	
+	public BigDecimal getStopPrice(String itemID) {
+		BigDecimal stopPrice = null;
+		LocalDate date=null;
+		for(Order order : onHands.values()) {
+			if(order.getItemID().equals(itemID)) {
+				if(date==null) {
+					date = order.getDate();
+					stopPrice = order.getStopPrice();
+				}else {
+					if(date.isBefore(order.getDate())) {
+						date = order.getDate();
+						stopPrice = order.getStopPrice();
+					}
+				}
+			}
+		}
+		return stopPrice;
+	}
+	
+	public BigDecimal getReopenPrice(String itemID) {
+		BigDecimal reopenPrice = new BigDecimal(0);
+		LocalDate date=null;
+		for(Order order : onHands.values()) {
+			if(order.getItemID().equals(itemID)) {
+				if(date==null) {
+					date = order.getDate();
 					reopenPrice = order.getReopenPrice();
+				}else {
+					if(date.isBefore(order.getDate())) {
+						date = order.getDate();
+						reopenPrice = order.getReopenPrice();
+					}
 				}
 			}
 		}
@@ -84,13 +138,14 @@ public class Account {
 		endDate = openOrder.getDate();
 	}
 	
-	public void close(String itemID, LocalDate date, BigDecimal price) {
+	public void close(String itemID, LocalDate date, BigDecimal price,LocalDate[] dates, Integer rate) {
 		Order openOrder;
 		for(Iterator<Map.Entry<String, Order>> it=onHands.entrySet().iterator(); it.hasNext();) {
 			openOrder = it.next().getValue();
 			if(openOrder.getItemID().equals(itemID)) {
 				Order closeOrder = new Order(openOrder.getOrderID(),date,price,openOrder.getQuantity());
-				closeOrder.setNote("close");
+				closeOrder.setNote("close" + "，bDate" + dates[0] + "，eDate=" + dates[1]);
+				closeOrder.setCloseRateOfHL(rate);
 				
 				cash = cash.add(closeOrder.getAmount()); //卖出时，现金增加
 				value = value.subtract(closeOrder.getAmount());		//市值减少
@@ -105,11 +160,13 @@ public class Account {
 		Order openOrder;
 		for(Iterator<Map.Entry<String, Order>> it=onHands.entrySet().iterator(); it.hasNext();) {
 			openOrder = it.next().getValue();
+			//System.out.println(openOrder);
+			//System.out.println(openOrder.getItemID());
 			if(openOrder.getItemID().equals(bar.getItemID())) {
 				if(bar.getLow().compareTo(openOrder.getStopPrice())==-1 && openOrder.getDirection()==1){
-					String msg =  bar.getItemID() + "," + bar.getDate() + ", 盘中最低价" + bar.getLow() + "跌破止损价" + openOrder.getStopPrice() + ", 止损！！！";
-					System.out.println(msg);
-					logger.warn(msg);
+					
+					String msg =  bar.getItemID() + "，" + bar.getDate() + "，盘中最低价" + bar.getLow() + "跌破止损价" + openOrder.getStopPrice() + "，止损！！！";
+					logger.info(msg);
 					
 					Order closeOrder = new Order(openOrder.getOrderID(),bar.getDate(),bar.getClose(),openOrder.getQuantity());
 					closeOrder.setNote("stop");
@@ -139,7 +196,7 @@ public class Account {
 			}
 		}
 
-		return (wins*100)/all;
+		return all==0 ? 0 :(wins*100)/all;
 	}
 	
 	/*
@@ -173,8 +230,8 @@ public class Account {
 	
 	public BigDecimal getValue() {
 		BigDecimal total = new BigDecimal(0);
-		for(Order r : onHands.values()) {
-			total = total.add(r.getAmount());
+		for(Order order : onHands.values()) {
+			total = total.add(latestPrices.get(order.getItemID()).getPrice().multiply(new BigDecimal(order.getQuantity())));
 		}
 
 		return total;
@@ -202,6 +259,8 @@ public class Account {
 		sb.append(",");
 		sb.append("buyNote");
 		sb.append(",");
+		sb.append("rateOfHL");
+		sb.append(",");
 		sb.append("closeDate");
 		sb.append(",");
 		sb.append("closePrice");
@@ -209,6 +268,8 @@ public class Account {
 		sb.append("closeAmount");
 		sb.append(",");
 		sb.append("sellNote");
+		sb.append(",");
+		sb.append("rateOfHL");
 		sb.append(",");
 		sb.append("profit");
 		sb.append(",");
@@ -225,6 +286,10 @@ public class Account {
 		for(Map.Entry<String,Order> entry : open_his.entrySet()) {
 			openOrder = entry.getValue();
 			closeOrder = close_his.get(entry.getKey());
+			if(closeOrder==null) {
+				closeOrder = new Order(openOrder.getOrderID(),latestPrices.get(openOrder.getItemID()).getDate(),latestPrices.get(openOrder.getItemID()).getPrice(),openOrder.getQuantity());
+				closeOrder.setNote("cloze");
+			}
 			sb.append("'" + openOrder.getItemID());
 			sb.append(",");
 			sb.append("");
@@ -241,22 +306,50 @@ public class Account {
 			sb.append(",");
 			sb.append(openOrder.getNote());
 			sb.append(",");
-			sb.append(closeOrder==null ? "" : closeOrder.getDate());
+			sb.append(openOrder.getOpenRateOfHL());
 			sb.append(",");
-			sb.append(closeOrder==null ? "" : closeOrder.getPrice());
+			sb.append(closeOrder.getDate());
 			sb.append(",");
-			sb.append(closeOrder==null ? "" : closeOrder.getAmount());
+			sb.append(closeOrder.getPrice());
 			sb.append(",");
-			sb.append(closeOrder==null ? "" : closeOrder.getNote());
+			sb.append(closeOrder.getAmount());
 			sb.append(",");
-			sb.append(closeOrder==null ? 0 : closeOrder.getAmount().subtract(openOrder.getAmount()));
+			sb.append(closeOrder.getNote());
 			sb.append(",");
-			sb.append(closeOrder==null ? 0 : closeOrder.getDate().getYear());
+			sb.append(closeOrder.getCloseRateOfHL());
 			sb.append(",");
-			sb.append(closeOrder==null ? 0 : closeOrder.getDate().getMonth().getValue());
+			sb.append(closeOrder.getAmount().subtract(openOrder.getAmount()));
+			sb.append(",");
+			sb.append(closeOrder.getDate().getYear());
+			sb.append(",");
+			sb.append(closeOrder.getDate().getMonth().getValue());
 			sb.append("\n");
 
 		}
 		return sb.toString();
+	}
+	
+	class Price {
+		private LocalDate date;
+		private BigDecimal price;
+		
+		public Price(LocalDate date, BigDecimal price) {
+			this.date = date;
+			this.price = price;
+		}
+		
+		public LocalDate getDate() {
+			return date;
+		}
+		public void setDate(LocalDate date) {
+			this.date = date;
+		}
+		public BigDecimal getPrice() {
+			return price;
+		}
+		public void setPrice(BigDecimal price) {
+			this.price = price;
+		}
+		
 	}
 }

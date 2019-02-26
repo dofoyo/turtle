@@ -7,6 +7,9 @@ import java.util.Map;
 
 public interface EntityRepository {
 	public ItemEntity<LocalDate> getDailyKData(String itemID);
+	public ItemEntity<LocalDate> getDailyCagr(String itemID);
+	public void EvictDailyKDataCache();
+	public void EvictDailyCagrsCache();
 	public ItemEntity<LocalDateTime> get5MinKData(String itemID);
 	public Map<LocalDate,List<String>> getDailyTopIds();
 	public Map<LocalDate,List<String>> getAvaTopIds();

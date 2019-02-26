@@ -42,10 +42,11 @@ public class TurtleSimulationSpiderTest {
 	
 	@Test
 	public void downKdata() {
-		String[] ids = {"sh601318","sh600519","sz000725","sz000063","sz000651","sh600030","sz000858","sz300059","sz000333","sh600887"};
+/*		String[] ids = {"sh601318","sh600519","sz000725","sz000063","sz000651","sh600030","sz000858","sz300059","sz000333","sh600887"};
 		for(String id : ids) {
 			turtleSimulationSpider.downKdata(id);
-		}
+		}*/
+		turtleSimulationSpider.downKdata("sz300059");
 	}
 	
 }

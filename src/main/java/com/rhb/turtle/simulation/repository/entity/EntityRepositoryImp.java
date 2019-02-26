@@ -10,15 +10,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.rhb.turtle.util.FileUtil;
+import com.rhb.turtle.util.JsonUtil;
 
 @Service("entityRepositoryImp")
 public class EntityRepositoryImp implements EntityRepository{
 	@Value("${kDataPath}")
 	private String kDataPath;
+
+	@Value("${cagrsPath}")
+	private String cagrsPath;
 	
 	@Value("${dailyTop100File}")
 	private String dailyTop100File;
@@ -72,8 +77,13 @@ public class EntityRepositoryImp implements EntityRepository{
 		return item;
 	}
 	
+
 	@Override
-	//@Cacheable("dailyKData")
+	@CacheEvict(value="dailyKDatas",allEntries=true)
+	public void EvictDailyKDataCache() {}
+	
+	@Override
+	@Cacheable("dailyKDatas")
 	public ItemEntity<LocalDate> getDailyKData(String itemID){
 		ItemEntity<LocalDate> item = null;
 		
@@ -112,6 +122,8 @@ public class EntityRepositoryImp implements EntityRepository{
 		}
 		return item;
 	}
+	
+	
 
 	@Override
 	@Cacheable("dailyTop100Ids")
@@ -149,5 +161,30 @@ public class EntityRepositoryImp implements EntityRepository{
 		}
 		return dailyIDSEntity;
 	}
+
+
+	@Override
+	@Cacheable("dailyCagrs")
+	public ItemEntity<LocalDate> getDailyCagr(String itemID) {
+		ItemEntity<LocalDate> item = new ItemEntity<LocalDate>(itemID,"","");
+		
+		String file = this.cagrsPath + "/" + itemID + ".json";			
+		//System.out.println("read from file " + file);
+		String[] source = FileUtil.readTextFile(file).split("\n");
+		for(String str : source) {
+			CagrEntity cagr = JsonUtil.jsonToPojo(str, CagrEntity.class);
+			if(cagr != null) {
+				cagr.setItemID(itemID);
+				item.setCagr(cagr.getDate(), cagr);
+				//System.out.println(cagr);
+			}
+		}
+		
+		return item;
+	}
+
+	@Override
+	@CacheEvict(value="dailyCagrs",allEntries=true)
+	public void EvictDailyCagrsCache() {}
 
 }

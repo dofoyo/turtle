@@ -38,8 +38,8 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	@Qualifier("turtleSimulationSpiderImp")
 	TurtleSimulationSpider turtleSimulationSpider ;
 	
-	private LocalDate beginDate = LocalDate.parse("2010-01-01");
-	private LocalDate endDate = LocalDate.parse("2018-09-13");
+	private LocalDate beginDate = LocalDate.parse("2017-01-01");
+	private LocalDate endDate = LocalDate.parse("2019-02-23");
 	
 	/*
 	 * 亏损因子，默认值为1%，即买了一个品种后 ，该品种价格下跌一个atr，总资金下跌1%
@@ -55,8 +55,8 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	
 	private Integer top = 13;  //成交量排名前13名，不能低于5
 	
-	private Integer openDuration = 89;
-	private Integer closeDuration = 34;
+	private Integer openDuration = 55;
+	private Integer closeDuration = 21;
 	
 	private BigDecimal initCash = new BigDecimal(100000);
 	
@@ -79,23 +79,24 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 			System.out.println(++i + "/" + days + "," + date);
 
 			//直接从dailyTop100中选前top个进行模拟 - 不止损(年复合收益率4%,盈率42%), 止损(年复合收益率13%,盈率24%)
-			itemIDs = turtleSimulationRepository.getDailyTopIds(top, date);
+			//itemIDs = turtleSimulationRepository.getDailyTopIds(top, date);
 
 			//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损(年复合收益率13%,盈率38%), 止损(年复合收益率19%,盈率21%)
 			//itemIDs = turtleSimulationRepository.getAvaTopIds(top, date);  
 			
 			//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损(年复合收益率8%,盈率41%), 止损(年复合收益率11%,盈率15%)
 			//itemIDs = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 
-			
+
+			//从gulex生成的bluechips中选取全部进行模拟, 不止损(年复合收益率0%,盈率38%), 止损(年复合收益率0%,盈率20%)
+			//itemIDs = turtleSimulationRepository.getBluechipIds(date);
+
 			//指定某一只牛股进行模拟，
 			//格力电器（000651, 不止损年复合收益率5%）
 			//贵州茅台（600519,不止损(年复合收益率14%,盈率65%), 止损(年复合收益率0%,盈率27%)）
 			//中国平安（601318,不止损年复合收益率8%）
-			//itemIDs = new ArrayList<String>();
-			//itemIDs.add("sh600519");
-			
-			//从gulex生成的bluechips中选取全部进行模拟, 不止损(年复合收益率0%,盈率38%), 止损(年复合收益率0%,盈率20%)
-			//itemIDs = turtleSimulationRepository.getBluechipIds(date);
+			itemIDs = new ArrayList<String>();
+		
+			itemIDs.add("sz000735");			
 			
 			if(itemIDs!=null) {
 				
@@ -107,11 +108,12 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 				
 				for(String itemID : itemIDs) {
 					barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
-					if(barEntity!=null) {
+					if(barEntity!=null && !barEntity.getHigh().equals(barEntity.getLow())) { //排除一字板，因为无法成交，
 						kData = barEntity.getMap();
 						turtle.doit(kData,isStop);
 						turtle.addBar(kData);
 					}
+					//itemEntityRepository.EvictDailyKDataCache();
 				}
 				
 				//System.out.println(ids);
@@ -123,3 +125,33 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 	}
 
 }
+
+/**
+ * 	beginDate = LocalDate.parse("2010-01-01");
+	endDate = LocalDate.parse("2018-09-13");
+	deficitFactor = new BigDecimal(0.005); 
+	maxOfLot = 5;  
+	top = 13; 
+	openDuration = 89;
+	closeDuration = 34;
+	isStop = true;
+	
+	//直接从dailyTop100中选前top个进行模拟 - 不止损(年复合收益率4%,盈率42%), 止损(年复合收益率13%,盈率24%)
+	itemIDs = turtleSimulationRepository.getDailyTopIds(top, date);
+
+	//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损(年复合收益率13%,盈率38%), 止损(年复合收益率19%,盈率21%)
+	//itemIDs = turtleSimulationRepository.getAvaTopIds(top, date);  
+	
+	//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损(年复合收益率8%,盈率41%), 止损(年复合收益率11%,盈率15%)
+	//itemIDs = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 
+
+	//从gulex生成的bluechips中选取全部进行模拟, 不止损(年复合收益率0%,盈率38%), 止损(年复合收益率0%,盈率20%)
+	//itemIDs = turtleSimulationRepository.getBluechipIds(date);
+
+	//指定某一只牛股进行模拟，
+	//贵州茅台（600519,不止损(年复合收益率14%,盈率65%), 止损(年复合收益率0%,盈率27%)）
+	//itemIDs = new ArrayList<String>();
+	//itemIDs.add("sh600519");
+ * 
+ * 
+ */

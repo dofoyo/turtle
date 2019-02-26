@@ -6,7 +6,7 @@ import java.time.LocalDate;
 public class Order {
 	private String orderID;
 	
-	private String articleID;
+	private String itemID;
 	/*
 	 * 时间
 	 */
@@ -38,13 +38,16 @@ public class Order {
 
 	
 	private String note;
+	
+	private Integer openRateOfHL; //  开仓时最高价比最低价高出的百分百
+	private Integer closeRateOfHL; //  平仓时最高价比最低价高出的百分百
 
 	/*
 	 * open时用
 	 */
-	public Order(String orderID,String articleID, LocalDate date,Integer direction, BigDecimal price, BigDecimal stopPrice, BigDecimal reopenPrice) {
+	public Order(String orderID,String itemID, LocalDate date,Integer direction, BigDecimal price, BigDecimal stopPrice, BigDecimal reopenPrice) {
 		this.orderID = orderID;
-		this.articleID = articleID;
+		this.itemID = itemID;
 		this.date = date;
 		this.direction = direction;
 		this.price = price;
@@ -68,6 +71,9 @@ public class Order {
 		return price.multiply(new BigDecimal(quantity));
 	}
 
+	public void setReopenPrice(BigDecimal reopenPrice) {
+		this.reopenPrice = reopenPrice;
+	}
 
 	public String getNote() {
 		return note;
@@ -119,11 +125,11 @@ public class Order {
 	}
 
 	public String getItemID() {
-		return articleID;
+		return itemID;
 	}
 
-	public void setArticleID(String articleID) {
-		this.articleID = articleID;
+	public void setItemID(String itemID) {
+		this.itemID = itemID;
 	}
 
 	public BigDecimal getStopPrice() {
@@ -142,11 +148,28 @@ public class Order {
 		this.reopenPrice = reopenPrice;
 	}
 
+	public Integer getOpenRateOfHL() {
+		return openRateOfHL;
+	}
+
+	public void setOpenRateOfHL(Integer openRateOfHL) {
+		this.openRateOfHL = openRateOfHL;
+	}
+
+	public Integer getCloseRateOfHL() {
+		return closeRateOfHL;
+	}
+
+	public void setCloseRateOfHL(Integer closeRateOfHL) {
+		this.closeRateOfHL = closeRateOfHL;
+	}
+
 	@Override
 	public String toString() {
-		return "Order [orderID=" + orderID + ", articleID=" + articleID + ", date=" + date + ", direction=" + direction
+		return "Order [orderID=" + orderID + ", itemID=" + itemID + ", date=" + date + ", direction=" + direction
 				+ ", price=" + price + ", quantity=" + quantity + ", stopPrice=" + stopPrice + ", reopenPrice="
-				+ reopenPrice + ", note=" + note + "]";
+				+ reopenPrice + ", note=" + note + ", openRateOfHL=" + openRateOfHL + ", closeRateOfHL=" + closeRateOfHL
+				+ "]";
 	}
 	
 }

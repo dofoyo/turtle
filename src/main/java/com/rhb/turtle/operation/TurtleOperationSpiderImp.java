@@ -56,7 +56,7 @@ public class TurtleOperationSpiderImp implements TurtleOperationSpider {
 		String[] ss = result.split("~");
 		//System.out.println(ss[2] + "," + ss[3] + "," + ss[30]);
 		
-		map.put("date", LocalDate.parse(ss[30].substring(0, 8),DateTimeFormatter.ofPattern("yyyyMMdd")).toString());
+		map.put("dateTime", LocalDate.parse(ss[30].substring(0, 8),DateTimeFormatter.ofPattern("yyyyMMdd")).toString());
 		map.put("code", ss[2]);
 		map.put("name", ss[1]);
 		map.put("preClose", ss[4]);
@@ -95,25 +95,57 @@ public class TurtleOperationSpiderImp implements TurtleOperationSpider {
 		
 		return ids;
 	}
+	
+	private String[] getYearAndJidu(Integer num) {
+		LocalDate now = LocalDate.now();
+		int year = now.getYear();
+		int jidu = now.getMonthValue()/3 + 1;
+		String[] ss = new String[num];
+		ss[0] = String.valueOf(year) + "." + String.valueOf(jidu);
+		for(int i=1; i<num; i++) {
+			if(jidu-1<=0) {
+				year--;
+				jidu=4;
+			}else {
+				jidu--;
+			}
+			ss[i]=String.valueOf(year) + "." + String.valueOf(jidu);
+		}
+		return ss;
+	}
+	
 
+	@Override
+	public Integer downKdatas(String id) {
+		Integer down=0;
+		String[] yjs = getYearAndJidu(5);
+		String year;
+		String jidu;
+		String file;
+		for(int i=0; i<yjs.length; i++) {
+			year = yjs[i].substring(0,4);
+			jidu = yjs[i].substring(5,6);
+			file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
+			if(i==0 || !FileUtil.isExists(file)) {
+				downKdatas(id,year,jidu);
+				try {Thread.sleep(5000);} catch (Exception e) {e.printStackTrace();}
+			}else {
+				System.out.println(yjs[i] + " have downloaded!");
+			}
+		}
+		return down;
+	}
 
 	@Override
 	public void downKdatas(String id, String year, String jidu) {
 		String code = id.substring(2);
-
-		LocalDate today = LocalDate.now();
-		//String year = String.valueOf(today.getYear());
-		//String jidu = String.valueOf(today.getMonthValue()/3 + 1);
-		
-		//String year = "2018";
-		//String jidu = "1";
 		
 		String strUrl = "http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/CODE.phtml?year=YEAR&jidu=JIDU";
 		strUrl = strUrl.replace("CODE", code);
 		strUrl = strUrl.replace("YEAR", year);
 		strUrl = strUrl.replace("JIDU", jidu);
 		String file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
-		System.out.println(file);
+		System.out.println("download " + file);
 		
 		try {
 			//String str = HttpClient.doGet(strUrl);
@@ -151,6 +183,8 @@ public class TurtleOperationSpiderImp implements TurtleOperationSpider {
 			e.printStackTrace();
 		}
 	}
+
+
 	
 	
 	

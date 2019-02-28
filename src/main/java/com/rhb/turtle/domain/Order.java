@@ -41,6 +41,7 @@ public class Order {
 	
 	private Integer openRateOfHL; //  开仓时最高价比最低价高出的百分百
 	private Integer closeRateOfHL; //  平仓时最高价比最低价高出的百分百
+	private BigDecimal atr;
 
 	/*
 	 * open时用
@@ -164,12 +165,20 @@ public class Order {
 		this.closeRateOfHL = closeRateOfHL;
 	}
 
+	public BigDecimal getAtr() {
+		return atr;
+	}
+
+	public void setAtr(BigDecimal atr) {
+		this.atr = atr;
+	}
+
 	@Override
 	public String toString() {
 		return "Order [orderID=" + orderID + ", itemID=" + itemID + ", date=" + date + ", direction=" + direction
 				+ ", price=" + price + ", quantity=" + quantity + ", stopPrice=" + stopPrice + ", reopenPrice="
 				+ reopenPrice + ", note=" + note + ", openRateOfHL=" + openRateOfHL + ", closeRateOfHL=" + closeRateOfHL
-				+ "]";
+				+ ", atr=" + atr + "]";
 	}
 	
 }

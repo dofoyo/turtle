@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-public interface TurtleOperationSpider {
+public interface KdataSpider {
 	public LocalDate getLatestMarketDate(); 
 	
 	/*
@@ -16,6 +16,8 @@ public interface TurtleOperationSpider {
 	public List<String> downLatestDailyTop100();
 	
 	public void downKdatas(String id, String year, String jidu);
+	
 	public Integer downKdatas(String id);
 
+	
 }

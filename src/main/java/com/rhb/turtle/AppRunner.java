@@ -11,13 +11,13 @@ import com.rhb.turtle.simulation.repository.TurtleSimulationCagrRepository;
 @Component
 public class AppRunner implements CommandLineRunner {
 	
-	@Autowired
+/*	@Autowired
 	@Qualifier("turtleSimulationCagrRepositoryImp")
 	TurtleSimulationCagrRepository cagrRepository;
-
+*/
     @Override
     public void run(String... args) throws Exception {
-    	cagrRepository.generateDailyCAGR();
+    	//cagrRepository.generateDailyCAGR();
     }
 
 }

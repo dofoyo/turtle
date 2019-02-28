@@ -87,26 +87,30 @@ public class Item {
 		}
 	}
 
+	
 	/*
 	 * 入市判断
 	 * 返回1，开多仓
 	 * 返回-1，开空仓
 	 * 返回null,不开仓
+	 * 
+	 * 
 	 */
-	public Integer openPing(Bar bar, Integer openDuration) {
+	public Integer openPing(Bar bar, Integer openDuration, Integer gap) {
 		//System.out.println("bars.size:" + bars.size());
 		if(this.bars.size()>=openDuration) {
-			BigDecimal[] highestAndLowest = getHighestAndLowest(openDuration);
+			BigDecimal[] highestAndLowest = getFeatures(openDuration);
 			BigDecimal highest = highestAndLowest[0];
 			BigDecimal lowest = highestAndLowest[1];
-/*			
+			Integer gapOfHighestAndLowest = highest.subtract(lowest).divide(lowest,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
+			/*			
 			if(itemID.equals("sh601318")) {
 				System.out.println(this.bars);
 				System.out.println("highest:" + highest + ",lowest:" + lowest);
 			}*/
 			
 			//突破高点，上涨势头，买多
-			if(bar.getHigh().compareTo(highest)>0) {
+			if(gapOfHighestAndLowest<gap && bar.getHigh().compareTo(highest)>0) {
 				//System.out.println(articleID + "," + openDuration +"天高点" + highest);
 				//System.out.println(this.bars);
 				String msg = itemID + "，" + bar.getDate() + "，盘中最高价格" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + "，开多仓！！";
@@ -116,7 +120,7 @@ public class Item {
 			}
 			
 			//突破低点，下跌势头，卖空
-			if(bar.getLow().compareTo(lowest)<0) {
+			if(gapOfHighestAndLowest<gap && bar.getLow().compareTo(lowest)<0) {
 				String msg = itemID + "，" + bar.getDate() + "盘中最低价格" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + "，开空仓！！";
 				//System.out.println(msg);
 				logger.info(msg);
@@ -149,9 +153,9 @@ public class Item {
 	}
 	
 	/*
-	 * 计算一段时间内的最高点、最低点
+	 * 计算一段时间内的最高点、最低点、最高点比最低点高出的百分百
 	 */
-	public BigDecimal[] getHighestAndLowest(Integer duration){
+	public BigDecimal[] getFeatures(Integer duration){
 		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
 		Integer toIndex = this.bars.size();
 		List<Bar> subBars = this.bars.subList(fromIndex, toIndex);
@@ -163,12 +167,13 @@ public class Item {
 				highest = bar.getHigh();
 			}
 			
-			if(bar.getLow().compareTo(lowest)<0) {
+			if(bar.getLow().compareTo(lowest)<0 && bar.getLow().compareTo(new BigDecimal(0))==1) {
 				lowest = bar.getLow();
 			}
 		}
-		
-		return new BigDecimal[]{highest,lowest}; 
+		BigDecimal rate = highest.subtract(lowest).divide(lowest,BigDecimal.ROUND_HALF_UP);
+
+		return new BigDecimal[]{highest,lowest,rate}; 
 	}
 	
 	
@@ -183,11 +188,11 @@ public class Item {
 		BigDecimal highest = new BigDecimal(0);
 		BigDecimal lowest = new BigDecimal(100000000);
 		for(Bar bar : subBars) {
-			if(bar.getHigh().compareTo(highest)>0) {
+			if(bar.getHigh().compareTo(highest)==1) {
 				highest = bar.getHigh();
 			}
 			
-			if(bar.getLow().compareTo(lowest)<0) {
+			if(bar.getLow().compareTo(lowest)==-1 && bar.getLow().compareTo(new BigDecimal(0))==1) {
 				lowest = bar.getLow();
 			}
 		}
@@ -202,7 +207,7 @@ public class Item {
 	 */
 	public boolean closePing(Bar bar, Integer d, Integer closeDuration) {
 		if(this.bars.size()>=closeDuration) {
-			BigDecimal[] keyValues = getHighestAndLowest(closeDuration);
+			BigDecimal[] keyValues = getFeatures(closeDuration);
 			BigDecimal highest = keyValues[0];
 			BigDecimal lowest = keyValues[1];
 

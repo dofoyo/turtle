@@ -20,11 +20,21 @@ import com.rhb.turtle.operation.TurtleOperationRepository;
 public class TurtleOperationRepositoryTests {
 	@Autowired
 	@Qualifier("turtleOperationRepositoryImp")
-	TurtleOperationRepository tr ;
+	TurtleOperationRepository tor ;
 
+	@Autowired
+	@Qualifier("turtlePreyRepositoryImp")
+	PreyRepository trr ;
+	
+	//@Test
+	public void dd() {
+		trr.generatePreys();
+		System.out.println("done!");
+	}
+	
 	//@Test
 	public void getOnhands() {
-		List<OrderEntity> orders = tr.getOnhands();
+		List<OrderEntity> orders = tor.getOnhands();
 		int i=1;
 		for(OrderEntity order : orders) {
 			System.out.println(order);			
@@ -34,7 +44,7 @@ public class TurtleOperationRepositoryTests {
 	//@Test
 	public void getKDatas() {
 		String id = "sz000735";
-		List<Map<String,String>> kDatas = tr.getKDatas(id);
+		List<Map<String,String>> kDatas = tor.getKDatas(id);
 		int i=1;
 		for(Map<String,String> kdata : kDatas) {
 			System.out.println(i++ + " -- " + kdata);
@@ -43,18 +53,18 @@ public class TurtleOperationRepositoryTests {
 	
 	//@Test
 	public void getDailyTop100Ids() {
-		List<String> ids = tr.getDailyTop100Ids();
+		List<String> ids = tor.getDailyTop100Ids();
 		System.out.println(ids);
 	}
 	
 	//@Test
 	public void generateAvaTop50() {
-		tr.generateAvaTop50(tr.getDailyTop100Ids());
+		tor.generateAvaTop50(tor.getDailyTop100Ids());
 	}
 	
-	@Test
+	//@Test
 	public void getArticles() {
-		Map<String,String> a = tr.getArticles();
+		Map<String,String> a = tor.getArticles();
 		System.out.println(a);
 	}
 	

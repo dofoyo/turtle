@@ -38,7 +38,7 @@ public class Account {
 		this.cash = cash;
 	}
 	
-	public void updatePrice(String itemID,LocalDate date, BigDecimal price) {
+	public void updatePrice(String itemID, LocalDate date, BigDecimal price) {
 		latestPrices.put(itemID, new Price(date,price));
 	}
 	
@@ -122,7 +122,9 @@ public class Account {
 	
 	public void open(Order openOrder, BigDecimal deficitFactor, BigDecimal atr, BigDecimal lot) {
 		BigDecimal unit = new BigDecimal(this.getPositionUnit(atr, lot, deficitFactor));
+	
 		openOrder.setQuantity(lot.multiply(unit).intValue());
+		
 		if(cash.subtract(openOrder.getAmount()).compareTo(new BigDecimal(0))==-1) {
 			openOrder.setQuantity(0);
 		}
@@ -261,6 +263,8 @@ public class Account {
 		sb.append(",");
 		sb.append("rateOfHL");
 		sb.append(",");
+		sb.append("atr");
+		sb.append(",");
 		sb.append("closeDate");
 		sb.append(",");
 		sb.append("closePrice");
@@ -307,6 +311,8 @@ public class Account {
 			sb.append(openOrder.getNote());
 			sb.append(",");
 			sb.append(openOrder.getOpenRateOfHL());
+			sb.append(",");
+			sb.append(openOrder.getAtr());
 			sb.append(",");
 			sb.append(closeOrder.getDate());
 			sb.append(",");

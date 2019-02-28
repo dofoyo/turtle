@@ -63,6 +63,8 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 	private Integer maxOfLot = 5;  
 	private Integer top = 13;  //成交量排名前13名，不能低于5
 	private BigDecimal initCash = new BigDecimal(100000);
+	private boolean isStop = false;
+	private Integer gap = 30;
 	
 	@Override
 	public List<String> getCAGRTops(Integer top, LocalDate date) {
@@ -75,6 +77,28 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		return FileUtil.readTextFile(cagrTopFile).split(",");
 	}
 	
+	class Board{
+		private Map<String,Integer> b = new HashMap<String,Integer>();
+		Integer i;
+		public void put(String str) {
+			i = b.get(str);
+			if(i==null) {
+				i = 1;
+			}else {
+				i++;
+			}
+			b.put(str, i);
+		}
+		
+		public String show() {
+			StringBuffer sb = new StringBuffer();
+			for(Map.Entry<String,Integer> entry : b.entrySet()) {
+				sb.append(entry.getKey() + "       " + entry.getValue() + " \n");
+			}
+			return sb.toString();
+		}
+	}
+	
 	@Override
 	public void generateDailyCAGR() {
 		long beginTime=System.currentTimeMillis(); 
@@ -82,16 +106,20 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		long used;
 		
 		String[] ids = this.getCAGRTopIDs();
-		
+		Board board = new Board();
 		//this.total = this.total * ids.size();
 		int total = ids.length;
 		int i=1;
+		String winner;
+
 		for(String id : ids) {
 			startTime=System.currentTimeMillis(); 
-			go(id);
+			winner = go(id);
+			if(winner!=null) board.put(winner);
 			itemEntityRepository.EvictDailyKDataCache();
 			used = (System.currentTimeMillis() - startTime)/1000;                //获得当前时间
-			System.out.format("  %d/%d, %s, %d秒\n",i++,total,id,used);          
+			System.out.format("  %d/%d, %s, %d秒\n",i++,total,id,used);
+			System.out.println(board.show());
 		}
 		
 		//go("sh601299");
@@ -100,67 +128,79 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 
 	}
 
-	private void go(String itemID) {
+	private String go(String itemID) {
+		String winner = null;
 		boolean[] isStops = {true, false};
 		Integer[] oDurations = {89,55,34,21};
 		Integer[] cDurations = {55,34,21,13,8};
-		List<ItemValue> ivs = new ArrayList<ItemValue>();
+		Integer[] gaps = {20,25,30,35,40,45,50,55,60,65};
+		//List<ItemValue> ivs = new ArrayList<ItemValue>();
 		ItemValue iv;
 		String csv;
 		BigDecimal cagr;
 		Map<String, String> runResult;
 		
-		Integer total = 17808;
+		//Integer total = 17808;
+		Integer total = 280;
 		Integer i=1;
 		String writeToFile = " ";
-		for(LocalDate date=beginDate; date.isBefore(endDate); date=date.plusDays(5)) {
+		LocalDate date = endDate;
+		//for(LocalDate date=beginDate; date.isBefore(endDate); date=date.plusDays(5)) {
 			iv = new ItemValue(date);
 			csv = null;
-			for(Integer oDuration : oDurations) {
-				for(Integer cDuration : cDurations) {
-					for(boolean iStop : isStops) {
-						if(oDuration > cDuration) {
-							//System.out.print("=");
-							runResult = run(itemID,date,oDuration,cDuration,iStop);
-							if(runResult!=null) {
-								cagr = new BigDecimal(runResult.get("cagr"));
-								if(cagr.compareTo(iv.getCAGR())==1) {
-									iv.setCAGR(cagr);
-									iv.setWinRatio(new BigDecimal(runResult.get("winRatio")));
-									iv.setOpenDuration(oDuration);
-									iv.setCloseDuration(cDuration);
-									iv.setStop(iStop);
-									
-									csv = runResult.get("CSV");
-									//System.out.println(itemID + ": " + iv);
-								}							
+			for(Integer gap : gaps) {
+				for(Integer oDuration : oDurations) {
+					for(Integer cDuration : cDurations) {
+						for(boolean iStop : isStops) {
+							if(oDuration > cDuration) {
+								//System.out.print("=");
+								runResult = run(itemID,beginDate,endDate,oDuration,cDuration,iStop,gap);
+								if(runResult!=null) {
+									cagr = new BigDecimal(runResult.get("cagr"));
+									if(cagr.compareTo(iv.getCAGR())==1) {
+										iv.setCAGR(cagr);
+										iv.setWinRatio(new BigDecimal(runResult.get("winRatio")));
+										iv.setOpenDuration(oDuration);
+										iv.setCloseDuration(cDuration);
+										iv.setStop(iStop);
+										iv.setGap(gap);
+										
+										csv = runResult.get("CSV");
+										//System.out.println(itemID + ": " + iv);
+									}							
+								}
+								//System.out.println(oDuration + "," + cDuration + "," + iStop);
+								Progress.show(total,i);
+								i++;
 							}
-							//System.out.println(oDuration + "," + cDuration + "," + iStop);
-							Progress.show(total,i);
-							i++;
 						}
 					}
 				}
 			}
-			//System.out.println("");
+			
+			//System.out.println("i = " + i);
+			
 			if(iv.getCAGR().compareTo(new BigDecimal(0))==1) {
-				ivs.add(iv);
+				//ivs.add(iv);
 				FileUtil.writeTextFile(cagrsPath  + "/" + itemID + ".json", JsonUtil.objectToJson(iv) + "\n", true);
-				FileUtil.writeTextFile(reportPath + "/" + itemID + ".csv",csv, false);
+				FileUtil.writeTextFile(reportPath + "/" + itemID + "_" + iv.getKey() + ".csv", csv , false);
 				writeToFile = " y";
 				
-				if(iv.getCAGR().compareTo(new BigDecimal(100))==1) {
+/*				if(iv.getCAGR().compareTo(new BigDecimal(100))==1) {
 					FileUtil.writeTextFile(reportPath + "/" + itemID + "_" + iv.getOpenDuration() + "_" + iv.getCloseDuration() + "_" + System.currentTimeMillis() + ".csv",csv, false);
 					writeToFile = "yy";
 				}
+*/				winner = iv.getKey();
 			}
-		}
+		//}
 		System.out.format(" %s ",writeToFile);
+		
+		return winner;
 	}
 	
 	
-	private Map<String, String> run(String itemID, LocalDate endDate,Integer oDuration, Integer cDuration,boolean iStop){
-		Turtle turtle = new Turtle(this.deficitFactor,oDuration,cDuration,this.maxOfLot,this.initCash);
+	private Map<String, String> run(String itemID, LocalDate beginDate,LocalDate endDate,Integer oDuration, Integer cDuration,boolean iStop,Integer gap){
+		Turtle turtle = new Turtle(this.deficitFactor,oDuration,cDuration,this.maxOfLot,this.initCash,this.isStop,this.gap);
 		
 		
 		//准备bDate前至少233天K线数据
@@ -168,7 +208,7 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		BarEntity<LocalDate> barEntity = itemEntityRepository.getDailyKData(itemID).getBar(endDate);
 		if(barEntity==null) return null;  //非交易日或停牌，不计算
 		
-		LocalDate preBeginDate = null;
+/*		LocalDate preBeginDate = null;
 		int k=1;
 		for(LocalDate date=endDate.minusDays(1); date.isAfter(this.beginDate); date = date.minusDays(1)) {
 			barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
@@ -178,7 +218,7 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 				break;
 			}
 		}
-		if(preBeginDate==null) return null;
+		if(preBeginDate==null) return null;*/
 		
 		Map<String,String> kData = null;
 
@@ -200,16 +240,16 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		int i = 0;
 		//System.out.println(days);
 		//System.out.println("from " + preBeginDate + " to " + endDate);
-		for(LocalDate date=preBeginDate; date.isBefore(endDate); date=date.plusDays(1)) {
+		for(LocalDate date=beginDate; date.isBefore(endDate); date=date.plusDays(1)) {
 			barEntity = itemEntityRepository.getDailyKData(itemID).getBar(date);
 			if(barEntity!=null && !barEntity.getHigh().equals(barEntity.getLow())) { //排除一字板，因为无法成交，
 				kData = barEntity.getMap();
-				turtle.doit(kData,iStop);
+				turtle.doit(kData);
 				turtle.addBar(kData);
 			}
 		}
 		
-		turtle.result().put("beginDate", preBeginDate.toString());
+		turtle.result().put("beginDate", beginDate.toString());
 		turtle.result().put("endDate", endDate.toString());
 		
 		return turtle.result();
@@ -222,6 +262,17 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		private boolean isStop;
 		private BigDecimal CAGR;
 		private BigDecimal winRatio;
+		private Integer gap;
+		
+		public String getKey() {
+			String key = "";
+			if(openDuration!=null && closeDuration!=null) {
+				//key = getOpenDuration().toString() + "_" + getCloseDuration() + "_" + (isStop() ? "1" : "0") + "_" + gap.toString();
+				key = gap.toString();
+
+			}
+			return key;
+		}
 		
 		public ItemValue(LocalDate date) {
 			this.date = date.toString();
@@ -265,10 +316,18 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 			this.winRatio = winRatio;
 		}
 
+		public Integer getGap() {
+			return gap;
+		}
+
+		public void setGap(Integer gap) {
+			this.gap = gap;
+		}
+
 		@Override
 		public String toString() {
 			return "ItemValue [date=" + date + ", openDuration=" + openDuration + ", closeDuration=" + closeDuration
-					+ ", isStop=" + isStop + ", CAGR=" + CAGR + ", winRatio=" + winRatio + "]";
+					+ ", isStop=" + isStop + ", CAGR=" + CAGR + ", winRatio=" + winRatio + ", gap=" + gap + "]";
 		}
 
 		

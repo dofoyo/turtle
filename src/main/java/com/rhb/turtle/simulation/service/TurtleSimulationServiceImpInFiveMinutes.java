@@ -66,6 +66,7 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 	private BigDecimal initCash = new BigDecimal(1000000);
 	
 	private boolean isStop = false; 
+	private Integer gap = 45;
 
 	/*
 	 * 指定某一只牛股按5分钟线进行模拟
@@ -75,7 +76,7 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 	
 	@Override
 	public Map<String, String> simulate() {
-		Turtle turtle = new Turtle(this.deficitFactor,this.openDuration,this.closeDuration,this.maxOfLot,this.initCash);
+		Turtle turtle = new Turtle(this.deficitFactor,this.openDuration,this.closeDuration,this.maxOfLot,this.initCash,this.isStop,this.gap);
 		String itemID = "sz000651";
 		
 		//准备2018-01-31前至少90天K线数据
@@ -112,12 +113,12 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 					fiveKData = fiveMinBarEntity.getMap();
 					if(fiveKData!=null) {
 						System.out.println(datetime);
-						prices = turtle.getItemPrices(itemID);
+						prices = turtle.getItemFeatures(itemID);
 						prices.put("now", new BigDecimal(fiveKData.get("close")));
 						System.out.println(Line.draw(prices));
 						
 						fiveKData.put("dateTime", date.toString()); //运行时，把分钟线当成当天最新价
-						turtle.doit(fiveKData, isStop);
+						turtle.doit(fiveKData);
 					}
 				}
 			}

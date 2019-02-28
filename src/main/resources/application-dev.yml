@@ -8,6 +8,7 @@ cagrsPath: C:/workspace/turtle-data/simulation/cagrs
 cagrTop50File: C:/workspace/turtle-data/simulation/cagrTop50.txt
 onhandsFile: C:/workspace/turtle-data/simulation/onhands.json
 cagrTopFile: C:/workspace/turtle-data/simulation/cagrTop.txt
+preysFile: C:/workspace/turtle-data/simulation/preys.csv
 
 
 

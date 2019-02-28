@@ -20,7 +20,7 @@ import com.rhb.turtle.util.HttpClient;
 import com.rhb.turtle.util.ParseString;
 
 @Service("turtleOperationSpiderImp")
-public class TurtleOperationSpiderImp implements TurtleOperationSpider {
+public class KdataSpiderImp implements KdataSpider {
 	@Value("${dailyTop100File}")
 	private String dailyTop100File;
 	
@@ -57,6 +57,7 @@ public class TurtleOperationSpiderImp implements TurtleOperationSpider {
 		//System.out.println(ss[2] + "," + ss[3] + "," + ss[30]);
 		
 		map.put("dateTime", LocalDate.parse(ss[30].substring(0, 8),DateTimeFormatter.ofPattern("yyyyMMdd")).toString());
+		map.put("itemID", id);
 		map.put("code", ss[2]);
 		map.put("name", ss[1]);
 		map.put("preClose", ss[4]);

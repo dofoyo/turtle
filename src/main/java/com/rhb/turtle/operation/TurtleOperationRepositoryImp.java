@@ -42,7 +42,7 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	
 	@Value("${onhandsFile}")
 	private String onhandsFile;
-	
+
 	@Override
 	public List<OrderEntity> getOnhands() {
 		String str = FileUtil.readTextFile(onhandsFile);

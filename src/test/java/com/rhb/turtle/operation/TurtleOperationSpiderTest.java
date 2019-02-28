@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.rhb.turtle.operation.TurtleOperationSpider;
+import com.rhb.turtle.operation.KdataSpider;
 import com.rhb.turtle.simulation.spider.TurtleSimulationSpider;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -21,7 +21,7 @@ import com.rhb.turtle.simulation.spider.TurtleSimulationSpider;
 public class TurtleOperationSpiderTest {
 	@Autowired
 	@Qualifier("turtleOperationSpiderImp")
-	TurtleOperationSpider turtleOperationSpider;
+	KdataSpider turtleOperationSpider;
 	
 	@Autowired
 	@Qualifier("turtleOperationRepositoryImp")

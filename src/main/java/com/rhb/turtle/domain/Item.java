@@ -2,66 +2,146 @@ package com.rhb.turtle.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * openHigh和openLow是 openDuration期间的高点和低点，当前价now如果突破openHigh，则做多，如果跌破openLow，则做空。
+ * dropHigh和dropLow时dropDuration期间的高点和低点，当前价now如果跌破dropLow时，则多头平仓，如果突破dropHigh，则空头平仓
+ * 
+ * 
+ * addBar -- 新增历史数据
+ * 	openHigh, openLow, hlgap, dropHigh, dropLow会变化
+ * 
+ * 
+ * setLastestBar -- 设置实时数据
+ *  now, nhgap, nlgap, status会变化
+ * 
+ * 
+ * hlgap：高点比低点高出的百分百
+ * nhgap: 当前价位比高点高出的百分百，为正表示当前价高于高点，向上突破
+ * nlgap: 当前价位比低点低出的百分百，为正表示当前价低于低点，向下突破
+ * status: 
+ * 	2 -- 表示当前价位高于高点high，做多
+ *  1 -- 表示当前价位低于高点high，高于dropLow,空头平仓
+ * -1 -- 表示当前价位高于低点low，低于dropHigh，多头平仓
+ * -2 -- 表示当前价位低于低点low，做空
+
+ * 
+ */
 public class Item {
 	protected static final Logger logger = LoggerFactory.getLogger(Item.class);
 	private String itemID;
-	
-	
-	/*
-	 * duration 的K线，只保持duration大小
-	 */
+	private Integer openDuration;
+	private Integer dropDuration;
 	private List<Bar> bars;
+	private Bar latestBar;
+
+	private BigDecimal openHigh;
+	private BigDecimal openLow;
+	private BigDecimal hlgap;
+	private BigDecimal dropHigh;
+	private BigDecimal dropLow;
+
+	private BigDecimal now;
+	private BigDecimal nhgap;
+	private BigDecimal nlgap;
+	private Integer status;
 	
-	public Item(String itemID) {
+	
+	public Item(String itemID, Integer openDuration, Integer dropDuration) {
 		this.itemID = itemID;
+		this.openDuration = openDuration;
+		this.dropDuration = dropDuration;
 		this.bars = new ArrayList<Bar>();
+	}
+	
+	public void clearBars() {
+		this.bars = new ArrayList<Bar>();
+	}
+	
+	public Bar getLatestBar() {
+		return this.latestBar;
+	}
+	
+	public void setLatestBar(Map<String,String> kData) {
+		latestBar = generateBar(kData);
+		
+		now = latestBar.getClose();
+		
+		try {
+			nhgap = latestBar.getClose().subtract(openHigh).divide(openHigh,BigDecimal.ROUND_HALF_UP);
+			nlgap = latestBar.getClose().subtract(openLow).divide(openLow,BigDecimal.ROUND_HALF_UP);
+		}catch(Exception e) {
+			System.out.println(itemID);
+			System.out.println(openHigh + "," + openLow);
+			System.out.println(latestBar);
+			System.out.println(bars);
+			e.printStackTrace();
+		}
+		
+		if(latestBar.getClose().compareTo(openHigh)>=0) {
+			status = 2;
+		}else if(latestBar.getClose().compareTo(openHigh)==-1 && latestBar.getClose().compareTo(dropLow)>=0) {
+			status = 1;
+		}else if(latestBar.getClose().compareTo(openLow)>=0 && latestBar.getClose().compareTo(dropHigh)==-1) {
+			status = -1;
+		}else {
+			status = -2;
+		}
 	}
 	
 	public List<Bar> getBars(){
 		return bars;
 	}
 	
-	public Bar addBar(String itemID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,Integer openDuration) {
-		Bar bar=null;
+	public void addBar(Map<String,String> kData) {
+		Bar bar = null;
 		if(this.bars.size()==0) {
-			bar = new Bar(itemID,date,open,high,low,close,this.getTR(high, low, close));
-			this.bars.add(bar);
-			return bar;
-		}
-		
-		bar = this.isLatestBar(date);
-		if(bar == null) {
+			bar = generateBar(kData);
+			bar.setTr(getTR(bar.getHigh(), bar.getLow(), bar.getClose()));
+		}else {
 			Bar preBar = this.bars.get(this.bars.size()-1);
 			BigDecimal preClose = preBar.getClose();
-			BigDecimal tr = getTR(high,low,preClose);
-			bar = new Bar(itemID,date,open,high,low,close,tr);
-			//System.out.println(bar);
-			this.bars.add(bar);
-			if(this.bars.size()>openDuration) {
-				this.bars.remove(0);
-			}
-		}else{
-			BigDecimal tr;
-			if(this.bars.size()>1) {
-				Bar preBar = this.bars.get(this.bars.size()-2);
-				BigDecimal preClose = preBar.getClose();
-				tr = getTR(high,low,preClose);
-			}else {
-				tr = getTR(high,low,close);
-			}
-			bar.setHigh(high);
-			bar.setLow(low);
-			bar.setOpen(open);
-			bar.setClose(close);
-			bar.setTr(tr);			
+			bar = generateBar(kData);
+			bar.setTr(getTR(bar.getHigh(), bar.getLow(), preClose));
 		}
-		return bar;
+		
+		this.bars.add(bar);
+		//System.out.println("addBar:" + bar);
+		if(this.bars.size()>openDuration) {
+			//System.out.println("removeBar:" + this.bars.get(0));
+			this.bars.remove(0);
+		}
+		
+		BigDecimal[] hl = getHighestAndLowest(openDuration);
+		this.openHigh = hl[0];
+		this.openLow = hl[1];
+		this.hlgap = hl[2];
+		
+		hl = getHighestAndLowest(dropDuration);
+		this.dropHigh = hl[0];
+		this.dropLow = hl[1];
+		
+	}
+	
+	public String getItemID() {
+		return itemID;
+	}
+
+	private Bar generateBar(Map<String,String> kData) {
+		LocalDate date = LocalDate.parse(kData.get("dateTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		BigDecimal open = new BigDecimal(kData.get("open"));
+		BigDecimal high = new BigDecimal(kData.get("high"));
+		BigDecimal low = new BigDecimal(kData.get("low"));
+		BigDecimal close = new BigDecimal(kData.get("close"));
+		return new Bar(date,open,high,low,close);
 	}
 	
 	/*
@@ -77,97 +157,55 @@ public class Item {
 		
 		return max;
 	}
-
-	private Bar isLatestBar(LocalDate date) {
-		Bar bar = this.bars.get(this.bars.size()-1);
-		if(bar.getDate().equals(date)) {
-			return bar;
-		}else {
-			return null;
-		}
-	}
-
 	
 	/*
-	 * 入市判断
-	 * 返回1，开多仓
-	 * 返回-1，开空仓
-	 * 返回null,不开仓
-	 * 
-	 * 
+	 * 计算平均波动幅度
 	 */
-	public Integer openPing(Bar bar, Integer openDuration, Integer gap) {
-		//System.out.println("bars.size:" + bars.size());
-		if(this.bars.size()>=openDuration) {
-			BigDecimal[] highestAndLowest = getFeatures(openDuration);
-			BigDecimal highest = highestAndLowest[0];
-			BigDecimal lowest = highestAndLowest[1];
-			Integer gapOfHighestAndLowest = highest.subtract(lowest).divide(lowest,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
-			/*			
-			if(itemID.equals("sh601318")) {
-				System.out.println(this.bars);
-				System.out.println("highest:" + highest + ",lowest:" + lowest);
-			}*/
-			
-			//突破高点，上涨势头，买多
-			if(gapOfHighestAndLowest<gap && bar.getHigh().compareTo(highest)>0) {
-				//System.out.println(articleID + "," + openDuration +"天高点" + highest);
-				//System.out.println(this.bars);
-				String msg = itemID + "，" + bar.getDate() + "，盘中最高价格" + bar.getHigh() + "突破" + openDuration + "天高点" + highest + "，开多仓！！";
-				//System.out.println(msg);
-				logger.info(msg);
-				return 1;
-			}
-			
-			//突破低点，下跌势头，卖空
-			if(gapOfHighestAndLowest<gap && bar.getLow().compareTo(lowest)<0) {
-				String msg = itemID + "，" + bar.getDate() + "盘中最低价格" + bar.getLow() + "突破" + openDuration + "天低点" + lowest + "，开空仓！！";
-				//System.out.println(msg);
-				logger.info(msg);
-				return -1;
-			}
-		}
-		return null;
-	}
-	
-	/*
-	 * 计算一段时间内的平均波动幅度
-	 */
-	public BigDecimal getATR(Integer duration) {
-		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
-		Integer toIndex = this.bars.size();
-		List<Bar> subBars = this.bars.subList(fromIndex, toIndex);
-		
+	public BigDecimal getATR() {
 		BigDecimal sum_tr = new BigDecimal(0);
-		for(Bar bar : subBars) {
+		for(Bar bar : bars) {
 			sum_tr = sum_tr.add(bar.getTr());
 		}
 		return sum_tr.divide(new BigDecimal(this.bars.size()),BigDecimal.ROUND_HALF_UP); 
 	}
 	
-	public LocalDate[] getBeginAndEndDateOfOpenDuration() {
-		LocalDate[] dates = new LocalDate[2];
-		dates[0] = this.bars.get(0).getDate();
-		dates[1] = this.bars.get(this.bars.size()-1).getDate();
- 		return dates;
+	public Map<String,String> getFeatures(){
+		if(this.bars.size() < openDuration) {
+			return null;
+		}
+		Map<String,String> features = new HashMap<String,String>();
+		
+		features.put("itemID", itemID);
+		features.put("openHigh", openHigh.toString());
+		features.put("openLow", openLow.toString());
+		features.put("hlgap", hlgap.toString()); 
+		features.put("nhgap", nhgap.toString()); 
+		features.put("nlgap", nlgap.toString()); 
+		features.put("dropHigh", dropHigh.toString());
+		features.put("dropLow", dropLow.toString());
+		features.put("now", now.toString());
+		features.put("status", status.toString());
+		features.put("atr", getATR().toString());
+		
+		return features;
+		
 	}
 	
-	/*
-	 * 计算一段时间内的最高点、最低点、最高点比最低点高出的百分百
-	 */
-	public BigDecimal[] getFeatures(Integer duration){
+	private BigDecimal[] getHighestAndLowest(Integer duration) {
 		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
 		Integer toIndex = this.bars.size();
 		List<Bar> subBars = this.bars.subList(fromIndex, toIndex);
 		
-		BigDecimal highest = new BigDecimal(0);
-		BigDecimal lowest = new BigDecimal(100000000);
+		BigDecimal highest = new BigDecimal(-1000000);
+		BigDecimal lowest = new BigDecimal(1000000);
 		for(Bar bar : subBars) {
 			if(bar.getHigh().compareTo(highest)>0) {
 				highest = bar.getHigh();
 			}
 			
-			if(bar.getLow().compareTo(lowest)<0 && bar.getLow().compareTo(new BigDecimal(0))==1) {
+			if(bar.getLow().compareTo(lowest)<0
+					//&& bar.getLow().compareTo(new BigDecimal(0))==1
+					) {
 				lowest = bar.getLow();
 			}
 		}
@@ -175,63 +213,50 @@ public class Item {
 
 		return new BigDecimal[]{highest,lowest,rate}; 
 	}
-	
-	
-	/*
-	 * 计算一段时间内的最高点比最低点高出的百分百
-	 */
-	public Integer getRateOfHighestAndLowest(Integer duration){
-		Integer fromIndex = this.bars.size()>duration ? this.bars.size()-duration : 0;
-		Integer toIndex = this.bars.size();
-		List<Bar> subBars = this.bars.subList(fromIndex, toIndex);
-		
-		BigDecimal highest = new BigDecimal(0);
-		BigDecimal lowest = new BigDecimal(100000000);
-		for(Bar bar : subBars) {
-			if(bar.getHigh().compareTo(highest)==1) {
-				highest = bar.getHigh();
-			}
-			
-			if(bar.getLow().compareTo(lowest)==-1 && bar.getLow().compareTo(new BigDecimal(0))==1) {
-				lowest = bar.getLow();
-			}
-		}
-		
-		Integer rate = highest.subtract(lowest).divide(lowest,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
-		
-		return rate; 
-	}
-	
-	/*
-	 * 退出判断
-	 */
-	public boolean closePing(Bar bar, Integer d, Integer closeDuration) {
-		if(this.bars.size()>=closeDuration) {
-			BigDecimal[] keyValues = getFeatures(closeDuration);
-			BigDecimal highest = keyValues[0];
-			BigDecimal lowest = keyValues[1];
 
-			//持有空头头寸，突破高点，上涨势头，平仓
-			if(d<0 && bar.getHigh().compareTo(highest)>0) {
-				String msg = "持有" + itemID + "空头，但盘中最高价" + bar.getHigh() + "突破" + closeDuration + "天高点" + highest + "，立即平仓！！";
-				logger.info(msg);
-				return true;
-			}
-			
-			//持有多头头寸，突破低点，下跌趋势，平仓
-			if(d>0 && bar.getLow().compareTo(lowest)<0) {
-				String msg = "持有" + itemID + "多头，但盘中最低价" + bar.getLow() + "突破" + closeDuration + "天低点" + lowest + "，立即平仓！！";
-				logger.info(msg);
-				return true;
-			}			
-		}
-		return false;
+	public Integer getOpenDuration() {
+		return openDuration;
 	}
-	
 
-	public String getItemID() {
-		return itemID;
+	public Integer getDropDuration() {
+		return dropDuration;
 	}
-	
+
+	public BigDecimal getOpenHigh() {
+		return openHigh;
+	}
+
+	public BigDecimal getOpenLow() {
+		return openLow;
+	}
+
+	public BigDecimal getHlgap() {
+		return hlgap;
+	}
+
+	public BigDecimal getDropHigh() {
+		return dropHigh;
+	}
+
+	public BigDecimal getDropLow() {
+		return dropLow;
+	}
+
+	public BigDecimal getNow() {
+		return now;
+	}
+
+	public BigDecimal getNhgap() {
+		return nhgap;
+	}
+
+	public BigDecimal getNlgap() {
+		return nlgap;
+	}
+
+	public Integer getStatus() {
+		return status;
+	}
+
 	
 }

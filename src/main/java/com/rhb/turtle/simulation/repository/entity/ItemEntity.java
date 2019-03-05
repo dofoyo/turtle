@@ -11,6 +11,9 @@ public class ItemEntity<T> {
 	private String itemID;
 	private String code;
 	private String name;
+	
+	private List<T> dateTimes;
+	
 	Map<T,BarEntity<T>> bars;
 	Map<LocalDate,CagrEntity> cagrs;
 	
@@ -20,10 +23,11 @@ public class ItemEntity<T> {
 		this.name = name;
 		bars = new HashMap<T,BarEntity<T>>();
 		cagrs = new HashMap<LocalDate,CagrEntity>();
+		dateTimes = new ArrayList<T>();
 	}
 	
-	public Set<T> getDateTimes(){
-		return bars.keySet();
+	public List<T> getDateTimes(){
+		return dateTimes;
 	}
 	
 	public String getItemID() {
@@ -47,6 +51,7 @@ public class ItemEntity<T> {
 	
 	public void setBar(T dateTime, BarEntity<T> bar) {
 		this.bars.put(dateTime, bar);
+		this.dateTimes.add(dateTime);
 	}
 
 	public BarEntity<T> getBar(T dateTime) {
@@ -59,10 +64,6 @@ public class ItemEntity<T> {
 	
 	public CagrEntity getCagr(LocalDate date) {
 		return this.cagrs.get(date);
-	}
-	
-	public Set<LocalDate> getDates(){
-		return cagrs.keySet();
 	}
 	
 	@Override

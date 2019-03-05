@@ -13,10 +13,15 @@ public interface KdataSpider {
 	 */
 	public Map<String,String> getLatestMarketData(String id);
 	
-	public List<String> downLatestDailyTop100();
+	public List<String> downLatestDailyTop(Integer top);
 	
 	public void downKdatas(String id, String year, String jidu);
 	
+	
+	/*
+	 * 注意季度交接日
+	 * 最好每天23点开始下载
+	 */
 	public Integer downKdatas(String id);
 
 	

@@ -18,16 +18,17 @@ public class TurtleOperationServiceTest {
 	@Autowired
 	@Qualifier("turtleOperationServiceImp")
 	TurtleOperationService ts;
-	
+
 	//@Test
-	public void operate() {
-		ts.tendOnhands();
+	public void getOnhands() {
+		ts.getHolds();
+		System.out.println("done");
 	}
 	
-	@Test
+	//@Test
 	public void doClosingWork() {
 		ts.doClosingWork();
-		System.out.println("done");
+		System.out.println("doClosingWork  done");
 	}
 	
 	//@Test

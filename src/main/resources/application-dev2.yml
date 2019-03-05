@@ -6,7 +6,7 @@ articlesFile: C:/workspace/turtle-data/operation/articles.txt
 bluechipsFile: C:/workspace/turtle-data/operation/bluechipids.txt
 cagrsPath: C:/workspace/turtle-data/operation/cagrs
 cagrTop50File: C:/workspace/turtle-data/operation/cagrTop50.txt
-onhandsFile: C:/workspace/turtle-data/operation/onhands.json
+holdsFile: C:/workspace/turtle-data/operation/holds.txt
 cagrTopFile: C:/workspace/turtle-data/operation/cagrTop.txt
 preysFile: C:/workspace/turtle-data/operation/preys.csv
 

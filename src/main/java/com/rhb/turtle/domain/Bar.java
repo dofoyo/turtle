@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Bar  {
-	private String itemID;
 	private LocalDate date;
 	private BigDecimal open;
 	private BigDecimal high;
@@ -12,8 +11,7 @@ public class Bar  {
 	private BigDecimal close;
 	private BigDecimal tr; // 波动幅度
 	
-	public Bar(String itemID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close) {
-		this.itemID = itemID;
+	public Bar(LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close) {
 		this.date = date;
 		this.open = open;
 		this.high = high;
@@ -21,8 +19,7 @@ public class Bar  {
 		this.close = close;
 	}
 	
-	public Bar(String itemID,LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
-		this.itemID = itemID;
+	public Bar(LocalDate date, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close,BigDecimal tr) {
 		this.date = date;
 		this.open = open;
 		this.high = high;
@@ -70,18 +67,11 @@ public class Bar  {
 		this.tr = tr;
 	}
 
-	public String getItemID() {
-		return itemID;
-	}
-
-	public void setItemID(String itemID) {
-		this.itemID = itemID;
-	}
-
 	@Override
 	public String toString() {
-		return "Kbar [itemID=" + itemID + ", date=" + date + ", open=" + open + ", high=" + high + ", low=" + low
-				+ ", close=" + close + ", tr=" + tr + "]";
+		return "Bar [date=" + date + ", open=" + open + ", high=" + high + ", low=" + low + ", close=" + close + ", tr="
+				+ tr + "]";
 	}
-
+	
+	
 }

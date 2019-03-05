@@ -113,9 +113,9 @@ public class TurtleSimulationServiceImpInFiveMinutes implements TurtleSimulation
 					fiveKData = fiveMinBarEntity.getMap();
 					if(fiveKData!=null) {
 						System.out.println(datetime);
-						prices = turtle.getItemFeatures(itemID);
-						prices.put("now", new BigDecimal(fiveKData.get("close")));
-						System.out.println(Line.draw(prices));
+						//prices = turtle.getItemFeatures(itemID);
+						//prices.put("now", new BigDecimal(fiveKData.get("close")));
+						//System.out.println(Line.draw(prices));
 						
 						fiveKData.put("dateTime", date.toString()); //运行时，把分钟线当成当天最新价
 						turtle.doit(fiveKData);

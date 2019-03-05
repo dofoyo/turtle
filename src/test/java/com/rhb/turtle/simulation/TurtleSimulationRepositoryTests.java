@@ -33,7 +33,7 @@ public class TurtleSimulationRepositoryTests {
 	@Qualifier("turtleSimulationCagrRepositoryImp")
 	TurtleSimulationCagrRepository cagrRepository ;
 
-	@Test
+	//@Test
 	public void generateCAGRTop50() {
 		cagrRepository.generateCAGRTop50();
 		System.out.println("generateDailyCAGR done!");
@@ -47,11 +47,11 @@ public class TurtleSimulationRepositoryTests {
 	
 	//@Test
 	public void getKDatas() {
-		String code = "000001";
-		LocalDate beginDate = LocalDate.parse("2008-01-01");
-		LocalDate endDate = LocalDate.parse("2018-09-12");
-		
-		/*List<Map<String,String>> kDatas = turtleSimulationRepository.getKDatas(code,beginDate,endDate);
+/*		String itemID = "sh600900";
+		LocalDate endDate = LocalDate.parse("2009-05-18");
+		Integer duration = 89;
+		System.out.println(endDate);
+		List<Map<String,String>> kDatas = turtleSimulationRepository.getKdatas(itemID,duration,endDate);
 		for(Map<String,String> data : kDatas) {
 			System.out.println(data.get("date") + "," + data.get("open")+ "," + data.get("high")+ "," + data.get("low")+ "," + data.get("close")+ "," + data.get("amount"));
 		}*/

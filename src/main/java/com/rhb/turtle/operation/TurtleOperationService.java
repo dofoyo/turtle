@@ -3,22 +3,18 @@ package com.rhb.turtle.operation;
 import java.util.List;
 import java.util.Map;
 
+import com.rhb.turtle.api.KdatasView;
+
 public interface TurtleOperationService {
 	/*
-	 * 每天上午9:00启动
-	 * 0、判断今天是否是交易日，不是交易日退出
 	 * 1、初始数据准备
 	 * 	1.1、导入onhands.json
 	 * 	1.2、获得onhands.json所列的股票的近n天的K线数据，天数大于openduration
-	 * 2、进入无限循环
-	 * 		2.1、在交易时段（9:30 -- 11:30, 13:00 -- 15:00）
-	 * 			2.1.1、获得当日onhands.json所列的股票当时最新市场数据，
-	 * 			2.1.2、根据最新市场数据提示stop、close操作，自己买卖的成交价位要自己保存到onhands.json
-	 *  		2.1.3、15:05前，继续循环，15:05后，结束循环，退出系统
+	 * 	2.1.1、获得当日onhands.json所列的股票当时最新市场数据，
+	 * 	2.1.2、根据最新市场数据提示stop、close操作
 	 * 
 	 */
-	public void tendOnhands();
-	public List<Map<String,String>> getOnhands();
+	public List<Map<String,String>> getHolds();
 
 	
 	/*
@@ -39,5 +35,7 @@ public interface TurtleOperationService {
 	 * 生成preys.csv
 	 */
 	public void doClosingWork();
+	
+	public KdatasView getKdatas(String itemID);
 	
 }

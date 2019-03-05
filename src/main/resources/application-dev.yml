@@ -6,7 +6,7 @@ articlesFile: C:/workspace/turtle-data/simulation/articles.txt
 bluechipsFile: C:/workspace/turtle-data/simulation/bluechipids.txt
 cagrsPath: C:/workspace/turtle-data/simulation/cagrs
 cagrTop50File: C:/workspace/turtle-data/simulation/cagrTop50.txt
-onhandsFile: C:/workspace/turtle-data/simulation/onhands.json
+holdsFile: C:/workspace/turtle-data/simulation/holds.txt
 cagrTopFile: C:/workspace/turtle-data/simulation/cagrTop.txt
 preysFile: C:/workspace/turtle-data/simulation/preys.csv
 

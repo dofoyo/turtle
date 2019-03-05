@@ -18,6 +18,6 @@ public interface TurtleOperationRepository {
 	 */
 	public void generateAvaTop50(List<String> ids);
 	
-	public List<OrderEntity> getOnhands();
+	public List<Map<String,String>> getHolds();
 	
 }

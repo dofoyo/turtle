@@ -49,12 +49,13 @@ public class TurtleSimulationServiceTest {
 	@Test
 	public void simulate() {
 		Map<String,String> result = ts.simulate();
+		System.out.println("CAGR: " + result.get("cagr"));
+		System.out.println("total: " + result.get("total"));
+
 		System.out.println("initCash: " + result.get("initCash"));
 		System.out.println("cash: " + result.get("cash"));
 		System.out.println("value: " + result.get("value"));
-		System.out.println("total: " + result.get("total"));
-		System.out.println("winRatio: " + result.get("winRatio"));
-		System.out.println("CAGR: " + result.get("cagr"));
+		//System.out.println("winRatio: " + result.get("winRatio"));
 		FileUtil.writeTextFile(reportPath + "/record" + System.currentTimeMillis() + ".csv", result.get("CSV"), false);
 	}
 	

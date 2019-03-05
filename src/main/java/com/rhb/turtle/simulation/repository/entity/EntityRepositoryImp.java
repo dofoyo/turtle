@@ -94,6 +94,9 @@ public class EntityRepositoryImp implements EntityRepository{
 		Integer length = lines.length;
 		
 		String[] columns = lines[0].split("\t");
+		//System.out.println(itemID);
+		//System.out.println(lines[0]);
+		
 		String code = columns[0].substring(1, 7);
 		String name = columns[1];
 		

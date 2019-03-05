@@ -40,13 +40,23 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 	@Value("${dailyTop100File}")
 	private String dailyTop100File;
 	
-	@Value("${onhandsFile}")
-	private String onhandsFile;
+	@Value("${holdsFile}")
+	private String holdsFile;
 
 	@Override
-	public List<OrderEntity> getOnhands() {
-		String str = FileUtil.readTextFile(onhandsFile);
-		return JsonUtil.jsonToList(str, OrderEntity.class);
+	public List<Map<String,String>> getHolds() {
+		List<Map<String,String>> holds = new ArrayList<Map<String,String>>();
+		Map<String,String> hold;
+		String[] lines = FileUtil.readTextFile(holdsFile).split("\n");
+		String[] columns;
+		for(String line : lines) {
+			columns = line.split(",");
+			hold = new HashMap<String,String>();
+			hold.put("itemID", columns[0]);
+			hold.put("price", columns[1]);
+			holds.add(hold);
+		}
+		return holds;
 	}
 	
 	@Override

@@ -30,7 +30,7 @@ public class TurtleOperationSpiderTest {
 	
 	//@Test
 	public void getLatestDate() {
-		turtleOperationSpider.downLatestDailyTop100();
+		turtleOperationSpider.downLatestDailyTop(100);
 		System.out.println("done");
 	}
 	

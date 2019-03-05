@@ -73,9 +73,9 @@ public class KdataSpiderImp implements KdataSpider {
 
 
 	@Override
-	public List<String> downLatestDailyTop100() {
+	public List<String> downLatestDailyTop(Integer top) {
 		List<String> ids = new ArrayList<String>();
-		String strUrl = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery112403517194352564321_1550228468554&type=CT&token=4f1862fc3b5e77c150a2b985b12db0fd&sty=FCOIATC&js=(%7Bdata%3A%5B(x)%5D%2CrecordsFiltered%3A(tot)%7D)&cmd=C._A&st=(Amount)&sr=-1&p=1&ps=100&_=1550228468980";
+		String strUrl = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?cb=jQuery112403517194352564321_1550228468554&type=CT&token=4f1862fc3b5e77c150a2b985b12db0fd&sty=FCOIATC&js=(%7Bdata%3A%5B(x)%5D%2CrecordsFiltered%3A(tot)%7D)&cmd=C._A&st=(Amount)&sr=-1&p=1&ps="+top.toString()+"&_=1550228468980";
 		//System.out.println(strUrl);
 		String result = HttpClient.doGet(strUrl);
 		//System.out.println(result);
@@ -100,7 +100,8 @@ public class KdataSpiderImp implements KdataSpider {
 	private String[] getYearAndJidu(Integer num) {
 		LocalDate now = LocalDate.now();
 		int year = now.getYear();
-		int jidu = now.getMonthValue()/3 + 1;
+		int m = now.getMonthValue();
+		int jidu = m<=3 ? 1 : (m<=6 ? 2 : (m<=9 ? 3 :4));
 		String[] ss = new String[num];
 		ss[0] = String.valueOf(year) + "." + String.valueOf(jidu);
 		for(int i=1; i<num; i++) {
@@ -118,8 +119,9 @@ public class KdataSpiderImp implements KdataSpider {
 
 	@Override
 	public Integer downKdatas(String id) {
+		String str;
 		Integer down=0;
-		String[] yjs = getYearAndJidu(5);
+		String[] yjs = getYearAndJidu(3);
 		String year;
 		String jidu;
 		String file;
@@ -129,9 +131,9 @@ public class KdataSpiderImp implements KdataSpider {
 			file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
 			if(i==0 || !FileUtil.isExists(file)) {
 				downKdatas(id,year,jidu);
-				try {Thread.sleep(5000);} catch (Exception e) {e.printStackTrace();}
+				try {Thread.sleep((Double.doubleToLongBits(Math.random()*10*1000)));} catch (Exception e) {e.printStackTrace();}
 			}else {
-				System.out.println(yjs[i] + " have downloaded!");
+				System.out.format("%s %s have downloaded!\n", id, yjs[i]);
 			}
 		}
 		return down;

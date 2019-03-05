@@ -14,6 +14,8 @@ import com.rhb.turtle.simulation.repository.entity.ItemEntity;
  */
 
 public interface TurtleSimulationRepository {
+	public List<Map<String,String>> getKdatas(String itemID, Integer duraion, LocalDate endDate);
+	
 	public List<String> getAvaTopIds(Integer top,LocalDate date);
 	public List<String> getDailyTopIds(Integer top,LocalDate date);
 	public List<String> getBluechipIds(LocalDate date);

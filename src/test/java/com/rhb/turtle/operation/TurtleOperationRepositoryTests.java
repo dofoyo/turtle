@@ -32,12 +32,11 @@ public class TurtleOperationRepositoryTests {
 		System.out.println("done!");
 	}
 	
-	//@Test
+	@Test
 	public void getOnhands() {
-		List<OrderEntity> orders = tor.getOnhands();
-		int i=1;
-		for(OrderEntity order : orders) {
-			System.out.println(order);			
+		List<Map<String,String>> holds = tor.getHolds();
+		for(Map<String,String> hold : holds) {
+			System.out.println(hold);
 		}
 	}
 	

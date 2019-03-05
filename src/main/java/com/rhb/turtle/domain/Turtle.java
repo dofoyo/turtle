@@ -2,7 +2,6 @@ package com.rhb.turtle.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +57,7 @@ public class Turtle {
 		maxOfLot = 3; 
 		initCash = new BigDecimal(100000);
 		isStop  = false;
-		gap = 30;
+		gap = 60;
 		account = new Account(initCash);
 		items = new HashMap<String,Item>();		
 	}
@@ -87,30 +86,19 @@ public class Turtle {
 		account.putOrder(order);
 	}
 	
-	public List<Bar> getKbars(String itemID){
+	public List<Bar> getBars(String itemID){
 		Item item = items.get(itemID);
 		return item.getBars();
 	}
 	
-	public Map<String,BigDecimal> getItemFeatures(String itemID){
+	public Map<String,String> getFeatures(String itemID){
 		Item item = items.get(itemID);
-		//System.out.println(item);
-		BigDecimal[] highAndLow = item.getFeatures(openDuration);
-		Map<String,BigDecimal> prices = new HashMap<String,BigDecimal>();
-		prices.put("high", highAndLow[0]);
-		prices.put("low", highAndLow[1]);
-		
-		List<Order> orders = account.getOrders(itemID);
-		for(Order order : orders) {
-			prices.put("buy", order.getPrice());
-			prices.put("stop", order.getStopPrice());
+		if(item==null) {
+			System.out.println(itemID);
+			System.out.println(items);
+			return null;
 		}
-		if(orders.size()>0) {
-			highAndLow = item.getFeatures(dropDuration);
-			prices.put("drop", highAndLow[1]);
-		}
-		
-		return prices;
+		return items.get(itemID).getFeatures();
 	}
 	
 	public List<String> getArticleIDsOfOnHand() {
@@ -122,11 +110,17 @@ public class Turtle {
 	 * itemID
 	 * code
 	 * name
-	 * now 当前价格
-	 * high 在openDuration期间内的最高点
-	 * low  在openDuration期间内的最低点
-	 * hlgap  在openDuration期间内的最高点和最低点的距离
-	 * nhgap 当前价格与最高点的gap，为正表示已突破，为负表示还未突破
+
+	 * 	features.put("openHigh", openHigh.toString());
+		features.put("openLow", openLow.toString());
+		features.put("hlgap", hlgap.toString()); 
+		features.put("nhgap", nhgap.toString()); 
+		features.put("nlgap", nlgap.toString()); 
+		features.put("dropHigh", dropHigh.toString());
+		features.put("dropLow", dropLow.toString());
+		features.put("now", now.toString());
+		features.put("status", status.toString());
+		features.put("atr", getATR().toString());
 	 * 
 	 */
 	public Map<String,String> hunt(Map<String,String> kData) {
@@ -142,170 +136,131 @@ public class Turtle {
 			return null;
 		}
 		
-		BigDecimal[] features = item.getFeatures(openDuration);
-		BigDecimal high = features[0];
-		BigDecimal low = features[1];
-		Integer hlgap = features[2].multiply(new BigDecimal(100)).intValue();
-		BigDecimal now = new BigDecimal(kData.get("close"));
-		Integer nhgap = now.subtract(high).divide(high,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).intValue();
-		
-		features = item.getFeatures(dropDuration);
-		BigDecimal drop = features[1];
-
-		Map<String,String> result = new HashMap<String,String>();
-		result.put("high", high.toString());
-		result.put("low", low.toString());
-		result.put("drop", drop.toString());
-		result.put("hlgap", hlgap.toString());
-		result.put("nhgap", nhgap.toString());
-		result.put("now", kData.get("close"));
-		result.put("itemID", kData.get("itemID"));
-		result.put("code", kData.get("code"));
-		result.put("name", kData.get("name"));			
-		result.put("operation", "");
-		
-		if(hlgap <= gap && now.compareTo(high)==1) {
-			result.put("operation", "open");
-		}else if(now.compareTo(drop)==-1) {
-			result.put("operation", "drop");
+		item.setLatestBar(kData);
+		Map<String,String> features = item.getFeatures();
+		if(features!=null) {
+			features.put("itemID", kData.get("itemID"));
+			features.put("code", kData.get("code"));
+			features.put("name", kData.get("name"));			
 		}
-		return result;
+		
+		return features;
 	}
 	
 	public void doit(Map<String,String> kData) {
-		Bar bar = getBar(kData);
-		
-		Item item = items.get(bar.getItemID());
+		Item item = items.get(kData.get("itemID"));
 		if(item == null) {
-			item = new Item(bar.getItemID());
-			items.put(bar.getItemID(), item);
+			System.out.format("ERROR: item is null of %s.\n", kData.get("itemID") );
+			return;
+		}		
+		if(item.getBars().size()<openDuration) {
+			//System.out.format("INF: %s history bars is %d, below open duration %d, skip.\n", kData.get("itemID"),item.getBars().size(),openDuration );
+			return;
 		}
 		
-		account.updatePrice(item.getItemID(), bar.getDate(), bar.getClose());
+		//item.setLatestBar(kData);
+		
+		Map<String,String> features = item.getFeatures();
+		Integer hlgap = new BigDecimal(features.get("hlgap")).multiply(new BigDecimal(100)).intValue();
+
+		account.updatePrice(item.getItemID(),kData.get("dateTime"), kData.get("close"));
+		Integer lots = account.getLots(item.getItemID());
 		
 		//止损
-		if(isStop) {
-			doStop(bar);
+		if(lots>0 && isStop) {
+			account.stop(kData);
 		}
 		
 		//平仓
-		doDrop(bar);
+		if(lots>0 && (features.get("status").equals("-1") || features.get("status").equals("-2"))) {
+			account.drop(kData);
+		}
 		
 		//开新仓、加仓
-		doOpen(bar);
+		if(features.get("status").equals("2")) {
+			if(lots>0 && lots<maxOfLot) {
+				doReopen(kData);
+			}else if(lots==0 && hlgap<=gap){
+				//System.out.println("hlgap: " + hlgap);
+				doOpen(kData);
+			}
+		}
 	}
 	
 	public void addBar(Map<String,String> kData) {
-		Bar bar = getBar(kData);
-		Item item = items.get(bar.getItemID());
+		Item item = items.get(kData.get("itemID"));
 		if(item == null) {
-			item = new Item(bar.getItemID());
-			items.put(bar.getItemID(), item);
-			//System.out.println("new Item, id is " + bar.getItemID());
+			item = new Item(kData.get("itemID"),openDuration,dropDuration);
+			items.put(kData.get("itemID"), item);
+			//System.out.println("new Item, id is " + item.getItemID());
+			//System.out.println("items.size=" + items.size());
 		}	
-		item.addBar(item.getItemID(),bar.getDate(), bar.getOpen(), bar.getHigh(), bar.getLow(), bar.getClose(), openDuration);
+		item.addBar(kData);
 	}
 	
-	public void addBar(List<Map<String,String>> kDatas) {
+	public boolean isExist(String itemID) {
+		return items.containsKey(itemID);
+	}
+	
+	public void clearBars(String itemID) {
+		Item item = items.get(itemID);
+		if(item!=null) {
+			item.clearBars();
+		}
+	}
+	
+	public void addBars(List<Map<String,String>> kDatas) {
 		for(Map<String,String> kData : kDatas) {
 			this.addBar(kData);
 		}
 	}
 	
-	/*
-	 * kData: dateTime, itemID, high, amount, low, close, open
-	 */
-	private Bar getBar(Map<String,String> kData) {
-		//System.out.println(kData);
-		//System.out.println(kData.get("dateTime"));
-		String itemID = kData.get("itemID");
-		LocalDate date = LocalDate.parse(kData.get("dateTime"), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		BigDecimal open = new BigDecimal(kData.get("open"));
+	public boolean setLatestBar(Map<String,String> kData) {
+		Item item = items.get(kData.get("itemID"));
+		if(item == null) {
+			System.out.println("ERROR: item is null!");
+			return false;
+		}
+		item.setLatestBar(kData);
+		return true;
+	}
+	
+	//开新仓
+	private void doOpen(Map<String,String> kData) {
+		Item item = items.get(kData.get("itemID"));
+		BigDecimal atr = item.getATR();
+		BigDecimal price = new BigDecimal(kData.get("close"));
+		LocalDate date = LocalDate.parse(kData.get("dateTime"));
+		
+		BigDecimal stopPrice = price.subtract(atr);
+		BigDecimal reopenPrice = price.add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
+		
+		Order openOrder = new Order(UUID.randomUUID().toString(),item.getItemID(),date, 1, price,stopPrice,reopenPrice	);
+		openOrder.setNote("open，stop=" + stopPrice + "，reOpen="+reopenPrice);
+		
+		account.open(openOrder, deficitFactor, atr, getLot(item.getItemID()));
+	
+	}
+	
+	//加仓
+	private void doReopen(Map<String,String> kData) {
+		Item item = items.get(kData.get("itemID"));
+		BigDecimal atr = item.getATR();
+		BigDecimal reopenPrice = account.getReopenPrice(item.getItemID());
+		BigDecimal price = new BigDecimal(kData.get("close"));
+		LocalDate date = LocalDate.parse(kData.get("dateTime"));
+		
 		BigDecimal high = new BigDecimal(kData.get("high"));
-		BigDecimal low = new BigDecimal(kData.get("low"));
-		BigDecimal close = new BigDecimal(kData.get("close"));
-		return new Bar(itemID,date,open,high,low,close);
-	}
-	
-	
-	//止损
-	private void doStop(Bar bar){
-		account.stop(bar);
-	}
-	
-	//平仓
-	private void doDrop(Bar bar) {
-		Item item = items.get(bar.getItemID());
-		Integer lots = account.getLots(item.getItemID());
-		if(lots != 0) { //有持仓
-			boolean flag = item.closePing(bar, lots, dropDuration);
-			if(flag) {  //触发平仓
-				LocalDate[] dates = item.getBeginAndEndDateOfOpenDuration();
-				Integer rate = item.getRateOfHighestAndLowest(dropDuration);
-				account.close(item.getItemID(), bar.getDate(), bar.getClose(), dates,rate);
-			}
+		if(high.compareTo(reopenPrice)==1) {
+			BigDecimal stopPrice = price.subtract(atr);
+			reopenPrice = price.add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
+			
+			Order openOrder = new Order(UUID.randomUUID().toString(),item.getItemID(),date, 1, price,stopPrice,	reopenPrice	);
+			openOrder.setNote("reOpen，stop=" + stopPrice + "，reOpen="+reopenPrice);
+			account.open(openOrder, deficitFactor, atr, getLot(item.getItemID()));
 		}
 	}
-	
-	//开仓
-	private void doOpen(Bar bar) {
-		Item item = items.get(bar.getItemID());
-		Order openOrder = null;
-		Integer flag = item.openPing(bar, openDuration, gap);
-		if(flag != null) {
-			Integer lots = account.getLots(item.getItemID());
-			//System.out.println("lots = " + lots);
-			BigDecimal atr = item.getATR(openDuration);
-			LocalDate[] dates = item.getBeginAndEndDateOfOpenDuration();
-			Integer rate = item.getRateOfHighestAndLowest(openDuration);
-			if(flag==1 && lots==0) { //初次开多仓
-				BigDecimal stopPrice = bar.getClose().subtract(atr);
-				BigDecimal reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-				openOrder = new Order(UUID.randomUUID().toString(),	item.getItemID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
-				openOrder.setNote("open，stop=" + stopPrice + "，reOpen="+reopenPrice + "，bDate" + dates[0] + "，eDate=" + dates[1]);
-				openOrder.setOpenRateOfHL(rate);
-				openOrder.setAtr(atr);
-			}
-			
-			if(flag==1 && lots>0 && lots<maxOfLot) {  //加开多仓
-				BigDecimal reopenPrice = account.getReopenPrice(item.getItemID());
-/*				if(bar.getItemID().equals("sh600570")) {
-					System.out.print(bar.getDate() + ",high=" + bar.getHigh() + ",reopenPrice=" + reopenPrice);
-				}
-*/				if(bar.getHigh().compareTo(reopenPrice)==1) {
-/*					if(bar.getItemID().equals("sh600570")) {
-						System.out.println(",reOpen");
-					}
-*/					BigDecimal stopPrice = bar.getClose().subtract(atr);
-					reopenPrice = bar.getClose().add(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-					openOrder = new Order(UUID.randomUUID().toString(),	item.getItemID(),	bar.getDate(), 1, bar.getClose(),	stopPrice,	reopenPrice	);
-					openOrder.setNote("reOpen，stop=" + stopPrice + "，reOpen="+reopenPrice + "，bDate" + dates[0] + "，eDate=" + dates[1]);
-					openOrder.setOpenRateOfHL(rate);
-					openOrder.setAtr(atr);
-				}
-			}
-			
-			/* 目前不做空
-			 * 
-			if(flag==-1 && lots==0) { //初次开空仓
-				BigDecimal stopPrice = price.add(atr);
-				BigDecimal reOpenPrice = price.subtract(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-				order = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	date, -1, price,	stopPrice,	reOpenPrice	);
-				order.setNote("open");
-			}
-			
-			if(flag==-1 && lots<0 && lots>-1*maxOfLot) { //加开空仓
-				BigDecimal stopPrice = price.add(atr);
-				BigDecimal reOpenPrice = price.subtract(atr.divide(new BigDecimal(2),BigDecimal.ROUND_HALF_UP));
-				order = new Order(UUID.randomUUID().toString(),	article.getArticleID(),	date, -1, price,	stopPrice,	reOpenPrice	);
-					order.setNote("reOpen");
-			}
-			*/
-			if(openOrder!=null) {
-				account.open(openOrder, deficitFactor, atr, getLot(item.getItemID()));
-			}
-		}
-	}
+		
 	
 	public Map<String,String> result() {
 		if(account == null) return null;

@@ -299,4 +299,31 @@ public class TurtleSimulationRepositoryImp implements TurtleSimulationRepository
 		
 	}
 
+	@Override
+	public List<Map<String, String>> getKdatas(String itemID, Integer duration, LocalDate endDate) {
+		List<Map<String, String>> kdatas = new ArrayList<Map<String,String>>();
+		
+		ItemEntity<LocalDate> item;
+		item = entityRepository.getDailyKData(itemID);
+		List<LocalDate> dates;
+		if(item!=null) {
+			int toIndex = 0;
+			for(int i=0; i<item.getDateTimes().size(); i++) {
+				toIndex = i;
+				if(!item.getDateTimes().get(i).isBefore(endDate)) {
+					break;
+				}
+			}
+			
+			int fromIndex = toIndex>duration ? toIndex-duration : 0;
+			dates = item.getDateTimes().subList(fromIndex, toIndex);
+			
+			for(LocalDate date : dates) {
+				kdatas.add(item.getBar(date).getMap());
+			}
+		}
+		
+		return kdatas;
+	}
+
 }

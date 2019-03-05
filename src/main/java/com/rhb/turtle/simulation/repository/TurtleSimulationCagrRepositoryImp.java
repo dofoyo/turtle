@@ -341,7 +341,7 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 		CagrEntity cagr;
 		ItemEntity item;
 		BarEntity bar;
-		Set<LocalDate> dates;
+		List<LocalDate> dates;
 		Map<LocalDate,TreeSet<CagrEntity>> tops = new HashMap<LocalDate,TreeSet<CagrEntity>>();
 		TreeSet<CagrEntity> cagrs;
 		
@@ -352,7 +352,7 @@ public class TurtleSimulationCagrRepositoryImp implements TurtleSimulationCagrRe
 			
 			itemID = file.getName().substring(0, 8);
 			item = itemEntityRepository.getDailyCagr(itemID);
-			dates = item.getDates();
+			dates = item.getDateTimes();
 			for(LocalDate date : dates) {
 				cagr = item.getCagr(date);
 				bar = itemEntityRepository.getDailyKData(itemID).getBar(date);

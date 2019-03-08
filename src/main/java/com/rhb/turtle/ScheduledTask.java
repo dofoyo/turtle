@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.rhb.turtle.operation.PreyRepository;
 import com.rhb.turtle.operation.TurtleOperationService;
 
 @Component
@@ -16,18 +15,13 @@ public class ScheduledTask {
 	@Qualifier("turtleOperationServiceImp")
 	TurtleOperationService ts;
 
-	@Autowired
-	@Qualifier("turtlePreyRepositoryImp")
-	PreyRepository turtlePreyRepository ;
-	
-	@Scheduled(cron="0 01 15 ? * 1-5")  //每周1至5收盘后，15:01，生成preys
-	public void generatePreys(){
-		System.out.println(LocalDateTime.now() +  "   " + Thread.currentThread().getName() + ":  生成 preys.............");
-		turtlePreyRepository.generatePreys();
-		System.out.println(Thread.currentThread().getName() + ":  生成preys 结束");
+	@Scheduled(cron="0 0/5 9-15 ? * 1-5")  //每周1至5，9 -- 15，每5分钟，生成preys
+	public void huntPreys(){
+		ts.huntPreys();
 	}
+
 	
-	@Scheduled(cron="0 59 23 ? * 1-5")  //每周1至5收盘后，23:59，执行收盘任务
+	@Scheduled(cron="0 55 23 ? * 1-5")  //每周1至5收盘后，23:59，执行收盘任务
 	public void doClosingWork(){
 		System.out.println(LocalDateTime.now() +  "   " + Thread.currentThread().getName() + ":  执行收盘任务开始.............");
 		ts.doClosingWork();

@@ -51,6 +51,7 @@ public class KdataSpiderImp implements KdataSpider {
 		String url = "http://qt.gtimg.cn/q=" + id;
 		String result = HttpClient.doGet(url);
 		
+		//System.out.println(url);
 		//System.out.println(result);
 		
 		String[] ss = result.split("~");
@@ -125,13 +126,18 @@ public class KdataSpiderImp implements KdataSpider {
 		String year;
 		String jidu;
 		String file;
+		long times;
 		for(int i=0; i<yjs.length; i++) {
 			year = yjs[i].substring(0,4);
 			jidu = yjs[i].substring(5,6);
 			file = kDataPath + "/" + id + "_" + year + "_" + jidu + ".txt";
 			if(i==0 || !FileUtil.isExists(file)) {
 				downKdatas(id,year,jidu);
-				try {Thread.sleep((Double.doubleToLongBits(Math.random()*10*1000)));} catch (Exception e) {e.printStackTrace();}
+				try {
+					times = (long) (Math.random() * 10) * 1000;
+					System.out.println("wait " + times/1000 + " seconds.");
+					Thread.sleep(times);
+				} catch (Exception e) {e.printStackTrace();}
 			}else {
 				System.out.format("%s %s have downloaded!\n", id, yjs[i]);
 			}
@@ -157,7 +163,8 @@ public class KdataSpiderImp implements KdataSpider {
 	        Connection connect = Jsoup.connect(strUrl);
 	        Map<String, String> header = new HashMap<String, String>();
 	        header.put("Host", "http://www.sina.com.cn");
-	        header.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:5.0) Gecko/20100101 Firefox/5.0");
+	        header.put("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; rv:11.0) like Gecko");
+	        //Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; rv:11.0) like Gecko
 	        header.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 	        header.put("Accept-Language", "zh-cn,zh;q=0.5");
 	        header.put("Accept-Charset", "GB2312,utf-8;q=0.7,*;q=0.7");

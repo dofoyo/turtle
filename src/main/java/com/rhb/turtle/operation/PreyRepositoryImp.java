@@ -48,6 +48,7 @@ public class PreyRepositoryImp implements PreyRepository {
 		for(String id : ids) {
 			kDatas = turtleOperationRepository.getKDatas(id);
 			if(kDatas.size()==0) {
+				System.out.println("NO kDatas, downloading...");
 				turtleOperationSpider.downKdatas(id);
 				kDatas = turtleOperationRepository.getKDatas(id);
 			}
@@ -67,8 +68,7 @@ public class PreyRepositoryImp implements PreyRepository {
 		for(String itemID : ids) {
 			kData = turtleOperationSpider.getLatestMarketData(itemID);//获得最新的K线数据
 			prey = turtle.hunt(kData);
-			if(prey!=null && prey.get("status").equals("2")) {
-			//if(prey!=null) {
+			if(prey!=null) {
 				list.add(prey);
 			}
 		}
@@ -93,6 +93,8 @@ public class PreyRepositoryImp implements PreyRepository {
 		sb.append("nhgap");
 		sb.append(",");
 		sb.append("atr");
+		sb.append(",");
+		sb.append("status");
 		sb.append("\n");
 		for(Map<String,String> map : list) {
 			sb.append(map.get("itemID"));
@@ -114,9 +116,12 @@ public class PreyRepositoryImp implements PreyRepository {
 			sb.append(map.get("nhgap"));
 			sb.append(",");
 			sb.append(map.get("atr"));
+			sb.append(",");
+			sb.append(map.get("status"));
 			sb.append("\n");
 		}
 		FileUtil.writeTextFile(preysFile, sb.toString(), false);
+		//FileUtil.write(sb.toString(), preysFile, "utf-8");
 	}
 
 	/*
@@ -133,26 +138,33 @@ public class PreyRepositoryImp implements PreyRepository {
 	 */
 	
 	@Override
-	public List<Map<String,String>> getPreys() {
+	public List<Map<String,String>> getPreys(String status) {
+		Map<String,String> articles = turtleOperationRepository.getArticles();
+
 		List<Map<String,String>> preys = new ArrayList<Map<String,String>>();
 		Map<String,String> prey;
 		String[] lines = FileUtil.readTextFile(preysFile).split("\n");
 		String[] columns;
+		String name,id;
 		for(int i=1; i<lines.length; i++) {
 			columns = lines[i].split(",");
-			prey = new HashMap<String,String>();
-			prey.put("itemID", columns[0]);
-			prey.put("code", columns[1]);
-			prey.put("name", columns[2]);
-			prey.put("low", columns[3]);
-			prey.put("high", columns[4]);
-			prey.put("now", columns[5]);
-			prey.put("drop", columns[6]);
-			prey.put("hlgap", columns[7]);
-			prey.put("nhgap", columns[8]);
-			prey.put("atr", columns[9]);
-
-			preys.add(prey);
+			if(columns[10].equals(status)) {
+				id = columns[0];
+				name = articles.get(id)==null ? columns[2] : articles.get(id);
+				prey = new HashMap<String,String>();
+				prey.put("itemID", id);
+				prey.put("code", columns[1]);
+				prey.put("name", name);
+				prey.put("low", columns[3]);
+				prey.put("high", columns[4]);
+				prey.put("now", columns[5]);
+				prey.put("drop", columns[6]);
+				prey.put("hlgap", columns[7]);
+				prey.put("nhgap", columns[8]);
+				prey.put("atr", columns[9]);	
+				
+				preys.add(prey);
+			}
 		}
 		//System.out.println(preys.size());
 		return preys;

@@ -16,7 +16,11 @@ public interface TurtleApi {
 	 * 并将其放入preys.txt中
 	 * 
 	 */
-	public ResponseContent<List<PreyView>> getPreys();
+	public ResponseContent<List<PreyView>> getPreys(String status);
+	
+	
+	public ResponseContent<List<PreyView>> getAmbushes();
+
 	
 	public ResponseContent<KdatasView> getKdatas(String itemID);
 

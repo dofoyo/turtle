@@ -26,6 +26,7 @@ public interface TurtleOperationService {
 	 */
 	public void huntPreys();
 	public List<Map<String,String>> getPreys();
+	public List<Map<String,String>> getAmbushes();
 
 	/*
 	 * 每天下午16点启动

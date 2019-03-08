@@ -27,12 +27,12 @@ public class TurtleOperationRepositoryTests {
 	PreyRepository trr ;
 	
 	//@Test
-	public void dd() {
+	public void generatePreys() {
 		trr.generatePreys();
 		System.out.println("done!");
 	}
 	
-	@Test
+	//@Test
 	public void getOnhands() {
 		List<Map<String,String>> holds = tor.getHolds();
 		for(Map<String,String> hold : holds) {
@@ -40,7 +40,7 @@ public class TurtleOperationRepositoryTests {
 		}
 	}
 	
-	//@Test
+	@Test
 	public void getKDatas() {
 		String id = "sz000735";
 		List<Map<String,String>> kDatas = tor.getKDatas(id);

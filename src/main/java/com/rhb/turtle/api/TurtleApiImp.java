@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rhb.turtle.operation.TurtleOperationService;
@@ -34,7 +35,9 @@ public class TurtleApiImp implements TurtleApi {
 
 	@Override
 	@GetMapping("/preys")
-	public ResponseContent<List<PreyView>> getPreys() {
+	public ResponseContent<List<PreyView>> getPreys(@RequestParam(value="status", defaultValue="2") String status) {
+		//System.out.println("status=" + status);
+		
 		List<PreyView> preys = new ArrayList<PreyView>();
 		List<Map<String,String>> maps = ts.getPreys();
 		
@@ -82,6 +85,35 @@ public class TurtleApiImp implements TurtleApi {
 		//['2013/6/4', 2297.1, 2272.42, 2264.76, 2297.1],
 		//['2013/6/5', 2270.71, 2270.93, 2260.87, 2276.86],['2013/6/6', 2264.43, 2242.11, 2240.07, 2266.69],['2013/6/7', 2242.26, 2210.9, 2205.07, 2250.63],['2013/6/13', 2190.1, 2148.35, 2126.22, 2190.1]";
 		return new ResponseContent<KdatasView>(ResponseEnum.SUCCESS, kdatas);
+	}
+
+	@Override
+	@GetMapping("/ambushes")
+	public ResponseContent<List<PreyView>> getAmbushes() {
+		List<PreyView> preys = new ArrayList<PreyView>();
+		List<Map<String,String>> maps = ts.getAmbushes();
+		
+		for(Map<String,String> map : maps) {
+			preys.add(new PreyView(map));
+		}
+		
+		Collections.sort(preys, new Comparator<PreyView>() {
+			@Override
+			public int compare(PreyView o1, PreyView o2) {
+				BigDecimal hl1 = new BigDecimal(o1.getHlgap());
+				BigDecimal hl2 = new BigDecimal(o2.getHlgap());
+				BigDecimal nh1 = new BigDecimal(o1.getNhgap());
+				BigDecimal nh2 = new BigDecimal(o2.getNhgap());
+				
+				if(hl1.equals(hl2)) {
+					return (nh2).compareTo(nh1);
+				}else {
+					return (hl1).compareTo(hl2);
+				}
+			}
+		});		
+		
+		return new ResponseContent<List<PreyView>>(ResponseEnum.SUCCESS, preys);	
 	}
 
 	

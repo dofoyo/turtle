@@ -1,14 +1,14 @@
-kDataPath: c:/workspace/turtle-data/operation/kdatas
-reportPath: C:/workspace/turtle-data/operation/reports
-dailyTop100File: C:/workspace/turtle-data/operation/dailyTop100.txt
-avaTop50File: C:/workspace/turtle-data/operation/avaTop50.txt
-articlesFile: C:/workspace/turtle-data/operation/articles.txt
-bluechipsFile: C:/workspace/turtle-data/operation/bluechipids.txt
-cagrsPath: C:/workspace/turtle-data/operation/cagrs
-cagrTop50File: C:/workspace/turtle-data/operation/cagrTop50.txt
-holdsFile: C:/workspace/turtle-data/operation/holds.txt
-cagrTopFile: C:/workspace/turtle-data/operation/cagrTop.txt
-preysFile: C:/workspace/turtle-data/operation/preys.csv
+kDataPath: D:/prod/turtle/data/kdatas
+reportPath: D:/prod/turtle/data/reports
+dailyTop100File: D:/prod/turtle/data/dailyTop100.txt
+avaTop50File: D:/prod/turtle/data/avaTop50.txt
+articlesFile: D:/prod/turtle/data/articles.txt
+bluechipsFile: D:/prod/turtle/data/bluechipids.txt
+cagrsPath: D:/prod/turtle/data/cagrs
+cagrTop50File: D:/prod/turtle/data/cagrTop50.txt
+holdsFile: D:/prod/turtle/data/holds.txt
+cagrTopFile: D:/prod/turtle/data/cagrTop.txt
+preysFile: D:/prod/turtle/data/preys.csv
 
 
 

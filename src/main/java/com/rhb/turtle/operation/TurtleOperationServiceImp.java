@@ -93,7 +93,7 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		
 		//生成avatop50
 		System.out.println("generateAvaTop50..........");
-		turtleOperationRepository.generateAvaTop50(dailyTop100IDs);
+		//turtleOperationRepository.generateAvaTop50(dailyTop100IDs);
 		
 		
 		//生成preys.txt
@@ -104,27 +104,49 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 	
 	@Override
 	public void huntPreys() {
+		LocalDate today, theDay;
+		LocalDateTime begin,end, now;
+		long times,startTime;
+		
+		startTime=System.currentTimeMillis(); 
+		System.out.println("生成 preys.............");
+
+		today = LocalDate.now();
+		theDay = turtleOperationSpider.getLatestMarketDate();
+		if(!today.equals(theDay)) {
+			System.out.println("NOT the trade day, bye!");
+			return;
+		}
+		begin = LocalDateTime.parse(today.toString() + " 09:30:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		end = LocalDateTime.parse(today.toString() + " 15:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		now = LocalDateTime.now();
+		if(now.isAfter(end) || now.isBefore(begin)) {
+			System.out.println("NOT the trade time, bye!");
+			return;
+		}
+		
 		turtlePreyRepository.generatePreys();
+		
+		System.out.format(".............生成preys结束, 用时：%d秒\n",(System.currentTimeMillis() - startTime)/1000);
+			
+/*			try {
+				times = 5 * 60 * 1000;
+				System.out.println("wait " + times + " minutes, then begin next.");
+				Thread.sleep(times);
+			} catch (Exception e) {e.printStackTrace();}
+*/			
 	}
 
+	@Override
+	public List<Map<String, String>> getAmbushes() {
+		//generatePreys();
+		return turtlePreyRepository.getPreys("1");
+	}
 
 	@Override
 	public List<Map<String,String>> getPreys() {
-		boolean isTradeDay = false;
-		boolean isTradeTime = false;
-		LocalDate today = LocalDate.now();
-		LocalDate theDay = turtleOperationSpider.getLatestMarketDate();
-		if(today.equals(theDay)) {
-			isTradeDay = true;
-		}
-		LocalDateTime end = LocalDateTime.parse(today.toString() + " 15:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-		LocalDateTime now = LocalDateTime.now();
-		if(now.isBefore(end)) {
-			isTradeTime = true;
-		}
-		if(isTradeDay && isTradeTime) turtlePreyRepository.generatePreys();
-		
-		return turtlePreyRepository.getPreys();
+		//generatePreys();
+		return turtlePreyRepository.getPreys("2");
 	}
 
 	@Override
@@ -217,6 +239,23 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		view.setName(latestKdata.get("name"));
 
 		return view;
+	}
+
+	
+	private void generatePreys() {
+		boolean isTradeDay = false;
+		boolean isTradeTime = false;
+		LocalDate today = LocalDate.now();
+		LocalDate theDay = turtleOperationSpider.getLatestMarketDate();
+		if(today.equals(theDay)) {
+			isTradeDay = true;
+		}
+		LocalDateTime end = LocalDateTime.parse(today.toString() + " 15:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		LocalDateTime now = LocalDateTime.now();
+		if(now.isBefore(end)) {
+			isTradeTime = true;
+		}
+		if(isTradeDay && isTradeTime) turtlePreyRepository.generatePreys();		
 	}
 	
 	

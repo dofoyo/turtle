@@ -24,7 +24,7 @@ public class OtherTest {
 
 	//@Test
 	public void rename() {
-		String path = "C:\\workspace\\turtle-data\\simulation\\dzh1";
+		String path = "D:\\prod\\turtle\\data\\kdatas";
 		List<File> files = FileUtil.getFiles(path, null, true);
 		String oldName;
 		String newName;
@@ -32,13 +32,7 @@ public class OtherTest {
 		for(File file : files) {
 			//codes.add(file.getName().substring(0, 6));
 			oldName = file.getName();
-			if(oldName.length()==10 && oldName.indexOf("60")==0) {
-				newName = "sh" + oldName;
-			}else if(oldName.length()==10){
-				newName = "sz" + oldName;
-			}else {
-				newName = null;
-			}
+			newName = oldName.substring(0, 2).toLowerCase() + oldName.substring(2);
 			
 			if(newName != null) {
 				newFile = new File(file.getParent() + "/" + newName);

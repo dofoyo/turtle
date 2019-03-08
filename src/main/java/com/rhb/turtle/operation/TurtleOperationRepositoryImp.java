@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,11 +19,9 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.rhb.turtle.domain.Order;
 import com.rhb.turtle.simulation.repository.AvaBar;
 import com.rhb.turtle.simulation.repository.Avarage;
 import com.rhb.turtle.util.FileUtil;
-import com.rhb.turtle.util.JsonUtil;
 
 @Service("turtleOperationRepositoryImp")
 public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
@@ -68,7 +65,9 @@ public class TurtleOperationRepositoryImp implements TurtleOperationRepository{
 		for(String str : lines) {
 			//System.out.println(str);
 			String[] ss = str.split(",");
-			articles.put(ss[0], ss[1]);
+			if(ss.length>1) {
+				articles.put(ss[0].toLowerCase(), ss[1]);
+			}
 		}
 		return articles;
 	}

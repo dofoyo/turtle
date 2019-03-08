@@ -6,18 +6,20 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import com.rhb.turtle.simulation.repository.TurtleSimulationCagrRepository;
+import com.rhb.turtle.operation.PreyRepository;
+
 
 @Component
 public class AppRunner implements CommandLineRunner {
 	
-/*	@Autowired
-	@Qualifier("turtleSimulationCagrRepositoryImp")
-	TurtleSimulationCagrRepository cagrRepository;
-*/
+	@Autowired
+	@Qualifier("turtlePreyRepositoryImp")
+	PreyRepository trr ;
+	
+	
     @Override
     public void run(String... args) throws Exception {
-    	//cagrRepository.generateDailyCAGR();
+		trr.generatePreys();
     }
 
 }

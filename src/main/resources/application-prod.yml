@@ -1,8 +1,11 @@
-kDataPath: c:/workspace/turtle-data/kdatas
-reportPath: C:/workspace/turtle-data/reports
-dataPath: C:/workspace/turtle-data
-dailyTop100: C:/workspace/turtle-data/dailyTop100.txt
-avaTop50: C:/workspace/turtle-data/avaTop50.txt
-
-
-
+kDataPath: D:/prod/turtle/data/kdatas
+reportPath: D:/prod/turtle/data/reports
+cagrsPath: D:/prod/turtle/data/cagrs
+dailyTop100File: D:/prod/turtle/data/dailyTop100.txt
+avaTop50File: D:/prod/turtle/data/avaTop50.txt
+articlesFile: D:/prod/turtle/data/articles.txt
+bluechipsFile: D:/prod/turtle/data/bluechipids.txt
+cagrTop50File: D:/prod/turtle/data/cagrTop50.txt
+holdsFile: D:/prod/turtle/data/holds.txt
+cagrTopFile: D:/prod/turtle/data/cagrTop.txt
+preysFile: D:/prod/turtle/data/preys.csv

@@ -125,14 +125,14 @@ public class Turtle {
 	 */
 	public Map<String,String> hunt(Map<String,String> kData) {
 		if(kData == null) {
-			System.out.format("ERROR: kdata can NOT be NULL!");
+			System.out.format("ERROR: kdata can NOT be NULL!\n");
 			return null;
 		}		
 		
 		Item item = items.get(kData.get("itemID"));
 
 		if(item == null) {
-			System.out.format("ERROR: can NOT get item of %s", kData.get("itemID"));
+			System.out.format("ERROR: can NOT get item of %s\n", kData.get("itemID"));
 			return null;
 		}
 		

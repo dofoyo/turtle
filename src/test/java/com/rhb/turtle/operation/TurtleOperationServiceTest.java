@@ -25,7 +25,7 @@ public class TurtleOperationServiceTest {
 		System.out.println("done");
 	}
 	
-	//@Test
+	@Test
 	public void doClosingWork() {
 		ts.doClosingWork();
 		System.out.println("doClosingWork  done");

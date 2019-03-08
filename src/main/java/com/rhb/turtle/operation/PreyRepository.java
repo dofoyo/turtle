@@ -14,6 +14,6 @@ public interface PreyRepository {
 	/*
 	 * 直接读取preys.csv
 	 */
-	public List<Map<String,String>> getPreys();
+	public List<Map<String,String>> getPreys(String status);
 	
 }

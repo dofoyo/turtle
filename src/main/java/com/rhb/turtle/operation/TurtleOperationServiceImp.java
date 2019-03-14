@@ -59,8 +59,8 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		
 		//下载dailyTop100
 		System.out.println("downLatestDailyTop100..............");
-		List<String> dailyTop100IDs = turtleOperationSpider.downLatestDailyTop(100);
-		//List<String> dailyTop100IDs = turtleOperationRepository.getDailyTop100Ids();
+		//List<String> dailyTop100IDs = turtleOperationSpider.downLatestDailyTop(100);
+		List<String> dailyTop100IDs = turtleOperationRepository.getDailyTop100Ids();
 		Set<String>  ids = new HashSet<String>(dailyTop100IDs);
 
 		
@@ -138,15 +138,9 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 	}
 
 	@Override
-	public List<Map<String, String>> getAmbushes() {
+	public List<Map<String,String>> getPreys(String status) {
 		//generatePreys();
-		return turtlePreyRepository.getPreys("1");
-	}
-
-	@Override
-	public List<Map<String,String>> getPreys() {
-		//generatePreys();
-		return turtlePreyRepository.getPreys("2");
+		return turtlePreyRepository.getPreys(status);
 	}
 
 	@Override
@@ -160,16 +154,11 @@ public class TurtleOperationServiceImp implements TurtleOperationService {
 		List<Map<String,String>> kDatas;
 		Map<String, String> latestKdata;
 		
-		//导入onhands.json
-		//String orderID,String itemID, LocalDate date,Integer direction, BigDecimal price, BigDecimal stopPrice, BigDecimal reopenPrice
-		//TODO 只录入时间、代码、价格，系统自动生成stopPrice、reopenPrice
 		List<Map<String,String>> holds = turtleOperationRepository.getHolds();
 		
 		String itemID;
 		BigDecimal price, stopPrice, reopenPrice,atr;
 		for(Map<String,String> hold : holds) {
-			//System.out.println(hold);
-			//System.out.println(hold.get("price"));
 			
 			itemID = hold.get("itemID");
 			price = new BigDecimal(hold.get("price"));

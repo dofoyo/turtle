@@ -33,6 +33,6 @@ public class TurtleOperationServiceTest {
 	
 	//@Test
 	public void getPreys() {
-		ts.getPreys();
+		ts.getPreys("2");
 	}
 }

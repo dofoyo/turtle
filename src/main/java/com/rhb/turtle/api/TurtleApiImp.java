@@ -36,10 +36,10 @@ public class TurtleApiImp implements TurtleApi {
 	@Override
 	@GetMapping("/preys")
 	public ResponseContent<List<PreyView>> getPreys(@RequestParam(value="status", defaultValue="2") String status) {
-		//System.out.println("status=" + status);
+		System.out.println("status=" + status);
 		
 		List<PreyView> preys = new ArrayList<PreyView>();
-		List<Map<String,String>> maps = ts.getPreys();
+		List<Map<String,String>> maps = ts.getPreys(status);
 		
 		for(Map<String,String> map : maps) {
 			preys.add(new PreyView(map));
@@ -87,34 +87,4 @@ public class TurtleApiImp implements TurtleApi {
 		return new ResponseContent<KdatasView>(ResponseEnum.SUCCESS, kdatas);
 	}
 
-	@Override
-	@GetMapping("/ambushes")
-	public ResponseContent<List<PreyView>> getAmbushes() {
-		List<PreyView> preys = new ArrayList<PreyView>();
-		List<Map<String,String>> maps = ts.getAmbushes();
-		
-		for(Map<String,String> map : maps) {
-			preys.add(new PreyView(map));
-		}
-		
-		Collections.sort(preys, new Comparator<PreyView>() {
-			@Override
-			public int compare(PreyView o1, PreyView o2) {
-				BigDecimal hl1 = new BigDecimal(o1.getHlgap());
-				BigDecimal hl2 = new BigDecimal(o2.getHlgap());
-				BigDecimal nh1 = new BigDecimal(o1.getNhgap());
-				BigDecimal nh2 = new BigDecimal(o2.getNhgap());
-				
-				if(hl1.equals(hl2)) {
-					return (nh2).compareTo(nh1);
-				}else {
-					return (hl1).compareTo(hl2);
-				}
-			}
-		});		
-		
-		return new ResponseContent<List<PreyView>>(ResponseEnum.SUCCESS, preys);	
-	}
-
-	
 }

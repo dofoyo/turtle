@@ -18,10 +18,6 @@ public interface TurtleApi {
 	 */
 	public ResponseContent<List<PreyView>> getPreys(String status);
 	
-	
-	public ResponseContent<List<PreyView>> getAmbushes();
-
-	
 	public ResponseContent<KdatasView> getKdatas(String itemID);
 
 

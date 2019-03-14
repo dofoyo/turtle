@@ -51,7 +51,7 @@ public class TurtleOperationSpiderTest {
 	
 	@Test
 	public void downKdatasFromIDs() {
-		String[] ids = {"sh600919","sh601328","sz002101","sh601998"};
+		String[] ids = {"sh601288"};
 		String[] yearAndJidu = getYearAndJidu(5);
 		for(String id : ids) {
 			for(String str : yearAndJidu) {

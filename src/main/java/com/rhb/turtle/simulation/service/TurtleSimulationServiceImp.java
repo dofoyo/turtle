@@ -97,10 +97,10 @@ public class TurtleSimulationServiceImp implements TurtleSimulationService {
 			System.out.println(++i + "/" + days + "," + date);
 
 			//直接从dailyTop100中选前top个进行模拟 - 不止损(年复合收益率4%,盈率42%), 止损(年复合收益率13%,盈率24%)
-			//itemIDs = turtleSimulationRepository.getDailyTopIds(top, date); cache = false;
+			itemIDs = turtleSimulationRepository.getDailyTopIds(top, date); cache = false;
 
 			//根据dailyTop100生成avaTop50，从中选前top个进行模拟 , 不止损(年复合收益率13%,盈率38%), 止损(年复合收益率19%,盈率21%)
-			itemIDs = turtleSimulationRepository.getAvaTopIds(top, date);  
+			//itemIDs = turtleSimulationRepository.getAvaTopIds(top, date);  
 			
 			//根据dailyTop100生成avaTop50，从中选通道最窄的前top个进行模拟, 不止损(年复合收益率8%,盈率41%), 止损(年复合收益率11%,盈率15%)
 			//itemIDs = turtleSimulationRepository.getNvaTopIds(top, date, openDuration); 

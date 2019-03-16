@@ -2,6 +2,7 @@ package com.rhb.turtle.util;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -22,6 +23,16 @@ import org.junit.Test;
 
 public class OtherTest {
 
+	@Test
+	public void testBigDecimal() {
+		BigDecimal a  = new BigDecimal(61);
+		BigDecimal b =  new BigDecimal(1);
+		BigDecimal c = new BigDecimal(32.182);
+		BigDecimal d = a.multiply(b).divide(c,3,BigDecimal.ROUND_DOWN);
+		System.out.println(d.setScale(3, BigDecimal.ROUND_HALF_UP));
+	}
+	
+	
 	//@Test
 	public void rename() {
 		String path = "D:\\prod\\turtle\\data\\kdatas";

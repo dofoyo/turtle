@@ -20,9 +20,16 @@ public class HttpClientTest {
 		//curl -X POST -d '{"api_name": "stock_basic", "token": "175936caa4637bc9ac8e5e75ac92eff6887739ca6be771b81653f278", "params": {"list_stauts":"L"}, "fields": "ts_code,name,area,industry,list_date"}' http://api.tushare.pro
 	}
 	
-	@Test
+	//@Test
 	public void test() {
 		String strUrl = "http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/300384.phtml?year=2019&jidu=1";
+		String result = HttpClient.doGet(strUrl);
+		System.out.println(result);
+	}
+	
+	@Test
+	public void test1() {
+		String strUrl = "http://irm.cninfo.com.cn/ircs/sse/sseSubIndex.do?condition.type=7";
 		String result = HttpClient.doGet(strUrl);
 		System.out.println(result);
 	}
